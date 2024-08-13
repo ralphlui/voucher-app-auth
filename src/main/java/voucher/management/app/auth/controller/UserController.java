@@ -107,6 +107,8 @@ public class UserController {
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
@@ -114,9 +116,6 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error(message));
 		}
-		message = "User registraiton is not successful.";
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error(message));
 
 	}
 
