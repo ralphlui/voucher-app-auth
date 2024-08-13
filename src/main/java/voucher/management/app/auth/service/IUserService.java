@@ -6,7 +6,12 @@ import java.util.Map;
 import org.springframework.data.domain.Pageable;
 
 import voucher.management.app.auth.dto.UserDTO;
+import voucher.management.app.auth.entity.User;
 
 public interface IUserService {
 	Map<Long, List<UserDTO>> findByIsActiveTrue(Pageable pageable);
+	
+	 UserDTO create(User user);
+	 
+	 User findByEmail(String email);
 }
