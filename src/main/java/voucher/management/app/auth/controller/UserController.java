@@ -12,24 +12,33 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
+import voucher.management.app.auth.dto.ValidationResult;
+import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.service.impl.UserService;
+import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
 
 import org.springframework.data.domain.Sort;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/voucherapp")
 public class UserController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private UserValidationStrategy userValidationStrategy;
+
 
 	@GetMapping(value = "/users", produces = "application/json")
 	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUser(@RequestParam(defaultValue = "0") int page,
@@ -74,6 +83,41 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error("Error: " + e.getMessage()));
 		}
+	}
+	
+	@PostMapping(value = "/users", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody User user) {
+		logger.info("Call user create API...");
+		String message;
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
+			if (validationResult.isValid()) {
+	
+				UserDTO userDTO  = userService.create(user);
+				
+				if (userDTO != null && !userDTO.getEmail().isEmpty()) {
+					return ResponseEntity.status(HttpStatus.OK)
+							.body(APIResponse.success(userDTO, "User registration is successful"));
+				} else {
+					message = "User registraiton is not successful.";
+					logger.error(message);
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+				}
+			} else {
+				message = validationResult.getMessage();
+				logger.error(message);
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			message = "Error: " + e.toString();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error(message));
+		}
+		message = "User registraiton is not successful.";
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error(message));
+
 	}
 
 }
