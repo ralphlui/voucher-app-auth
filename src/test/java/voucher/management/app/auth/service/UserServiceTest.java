@@ -1,10 +1,12 @@
 package voucher.management.app.auth.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,9 +46,6 @@ public class UserServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		// passwordEncoder = new BCryptPasswordEncoder();
-		// userService = new UserService(userRepository, passwordEncoder);
-
 		mockUsers.add(user);
 
 	}
@@ -69,6 +68,18 @@ public class UserServiceTest {
 		}
 		assertEquals(mockUsers.size(), userDTOList.size());
 		assertEquals(mockUsers.get(0).getEmail(), userDTOList.get(0).getEmail());
+
+	}
+	
+
+	@Test
+	void createUser() {
+
+		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
+		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+		UserDTO createdUser = userService.create(user);
+		assertThat(createdUser).isNotNull();
+		assertThat(createdUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
 	}
 
