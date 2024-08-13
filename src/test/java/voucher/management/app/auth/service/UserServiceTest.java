@@ -51,7 +51,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	void getAllActiveStore() {
+	void getAllActiveUsers() {
 
 		long totalRecord = 0;
 		List<UserDTO> userDTOList = new ArrayList<UserDTO>();
