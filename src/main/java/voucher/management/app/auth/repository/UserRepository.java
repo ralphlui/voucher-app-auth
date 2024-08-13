@@ -11,4 +11,8 @@ import voucher.management.app.auth.entity.User;
 public interface UserRepository extends JpaRepository<User, String> {
 
 	Page<User> findByIsActiveTrue(Pageable pageable);
+	
+	User save(User user);
+	
+	User findByEmail(String email);
 }
