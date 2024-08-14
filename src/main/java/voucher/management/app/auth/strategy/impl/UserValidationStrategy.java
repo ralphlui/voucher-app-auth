@@ -37,5 +37,29 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 		validationResult.setValid(true);
 		return validationResult;
 	}
+	
+	@Override
+	public ValidationResult validateObject(String email) {
+		ValidationResult validationResult = new ValidationResult();
+		User user = userService.findByEmail(email);
+
+		if (user == null) {
+			validationResult.setMessage("User account not found.");
+			validationResult.setStatus(HttpStatus.UNAUTHORIZED);
+			validationResult.setValid(false);
+		} else if (!user.isActive()) {
+			validationResult.setMessage("User account is deleted.");
+			validationResult.setStatus(HttpStatus.UNAUTHORIZED);
+			validationResult.setValid(false);
+		} else if (!user.isVerified()) {
+			validationResult.setMessage("Please verify the account first.");
+			validationResult.setStatus(HttpStatus.UNAUTHORIZED);
+			validationResult.setValid(false);
+		} else {
+			validationResult.setValid(true);
+		}
+
+		return validationResult;
+	}
 
 }

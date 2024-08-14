@@ -5,4 +5,6 @@ import voucher.management.app.auth.dto.ValidationResult;
 public interface IAPIHelperValidationStrategy<T> {
 
 	ValidationResult validateCreation(T data) ;
+	
+	ValidationResult validateObject(String data);
 }
