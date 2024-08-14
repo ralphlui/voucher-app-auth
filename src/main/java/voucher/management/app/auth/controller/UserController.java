@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
+import voucher.management.app.auth.dto.UserRequest;
+import voucher.management.app.auth.dto.UserResponse;
 import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.service.impl.UserService;
@@ -117,6 +119,39 @@ public class UserController {
 					.body(APIResponse.error(message));
 		}
 
+	}
+	
+	@PostMapping(value = "/login", produces = "application/json")
+	public ResponseEntity<APIResponse<UserResponse>> validateUserLogin(@RequestBody UserRequest userRequest) {
+		logger.info("Call user login API...");
+		String message = "";
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
+			if (!validationResult.isValid()) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(APIResponse.error(validationResult.getMessage()));
+			}
+
+			User user = userService.validateUserLogin(userRequest.getEmail(), userRequest.getPassword());
+			if (user != null) {
+				UserResponse userResp = new UserResponse();
+				userResp.setEmail(user.getEmail());
+				userResp.setUsername(user.getUsername());
+				userResp.setRole(user.getRole());
+				message = user.getEmail() + " login successfully";
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(APIResponse.success(userResp, message));
+			} else {
+				message = "Invalid credentials.";
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error("Error: " + e.toString()));
+		}
 	}
 
 }
