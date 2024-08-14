@@ -14,4 +14,6 @@ public interface IUserService {
 	 UserDTO create(User user);
 	 
 	 User findByEmail(String email);
+	 
+	 User validateUserLogin(String email, String password);
 }

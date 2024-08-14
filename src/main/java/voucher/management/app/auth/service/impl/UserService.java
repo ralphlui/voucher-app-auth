@@ -94,4 +94,19 @@ public class UserService implements IUserService  {
 		return userRepository.findByEmail(email);
 	}
 
+
+	@Override
+	public User validateUserLogin(String email, String password) {
+		try {
+			User user = userRepository.findByEmailAndStatus(email, true, true);
+			if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+				return user;
+			}
+		} catch (Exception e) {
+			logger.error("Error occurred while validateUserLogin, " + e.toString());
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }
