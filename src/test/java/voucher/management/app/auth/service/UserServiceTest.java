@@ -82,7 +82,7 @@ public class UserServiceTest {
 
 		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
-		UserDTO createdUser = userService.create(user);
+		User createdUser = userService.create(user);
 		assertThat(createdUser).isNotNull();
 		assertThat(createdUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
