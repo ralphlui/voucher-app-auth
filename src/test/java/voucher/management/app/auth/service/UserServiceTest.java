@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -41,6 +42,10 @@ public class UserServiceTest {
 	
 	@MockBean
 	private UserRepository userRepository;
+	
+	@MockBean
+	private PasswordEncoder passwordEncoder;
+
 	
 	private static User user = new User("admin12345@gmail.com", "Admin", "Pwd@123", RoleType.ADMIN, true);
 
@@ -82,5 +87,16 @@ public class UserServiceTest {
 		assertThat(createdUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
 	}
+	
+	@Test
+    public void testValidateUserLogin_Successful() {
+        
+        Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+        Mockito.when(passwordEncoder.matches(user.getPassword(), user.getPassword())).thenReturn(true);
+
+        User result = userService.validateUserLogin(user.getEmail(), user.getPassword());
+
+        assertEquals(user, result);
+    }
 
 }
