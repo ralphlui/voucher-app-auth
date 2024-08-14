@@ -11,7 +11,7 @@ import voucher.management.app.auth.entity.User;
 public interface IUserService {
 	Map<Long, List<UserDTO>> findByIsActiveTrue(Pageable pageable);
 	
-	 UserDTO create(User user);
+	 User create(User user);
 	 
 	 User findByEmail(String email);
 	 

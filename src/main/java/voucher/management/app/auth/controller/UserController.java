@@ -88,7 +88,7 @@ public class UserController {
 	}
 	
 	@PostMapping(value = "/users", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserResponse>> createUser(@RequestBody User user) {
 		logger.info("Call user create API...");
 		String message;
 
@@ -96,11 +96,16 @@ public class UserController {
 			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
 			if (validationResult.isValid()) {
 	
-				UserDTO userDTO  = userService.create(user);
+				User createdUser  = userService.create(user);
 				
-				if (userDTO != null && !userDTO.getEmail().isEmpty()) {
+				if (createdUser != null && !createdUser.getEmail().isEmpty()) {
+					UserResponse userResp = new UserResponse();
+					userResp.setEmail(user.getEmail());
+					userResp.setUsername(user.getUsername());
+					userResp.setRole(user.getRole());
+					message = user.getEmail() + " is created successfully";
 					return ResponseEntity.status(HttpStatus.OK)
-							.body(APIResponse.success(userDTO, "User registration is successful"));
+							.body(APIResponse.success(userResp, message));
 				} else {
 					message = "User registraiton is not successful.";
 					logger.error(message);

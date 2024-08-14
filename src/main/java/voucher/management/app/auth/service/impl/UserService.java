@@ -59,8 +59,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public UserDTO create(User user) {
-		UserDTO userDTO = new UserDTO();
+	public User create(User user) {
 		try {
 			String encodedPassword = passwordEncoder.encode(user.getPassword());
 			user.setPassword(encodedPassword);
@@ -75,18 +74,17 @@ public class UserService implements IUserService  {
 			if (createdUser != null) {
 				//sendVerificationEmail(createdUser);
 			}
-			userDTO = DTOMapper.toUserDTO(user);
 
-			return userDTO;
+			return createdUser;
 
 		} catch (Exception e) {
 			logger.error("Error occurred while user creating, " + e.toString());
 			e.printStackTrace();
 
 		}
-
-		return userDTO;
+		return null;
 	}
+	
 	
 	@Override
 	public User findByEmail(String email) {
