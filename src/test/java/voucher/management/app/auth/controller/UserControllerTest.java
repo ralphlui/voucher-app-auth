@@ -28,7 +28,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import voucher.management.app.auth.dto.UserDTO;
+import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.RoleType;
 import voucher.management.app.auth.service.impl.UserService;
@@ -48,6 +51,9 @@ public class UserControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 	
+	@Autowired
+	private ObjectMapper objectMapper;
+	
 	User testUser;
 
 	private static List<UserDTO> mockUsers = new ArrayList<>();
@@ -65,7 +71,6 @@ public class UserControllerTest {
 
 	}
 
-
 	
 	@Test
 	public void testGetAllUser() throws Exception {
@@ -81,6 +86,24 @@ public class UserControllerTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Successfully get all active user.")).andDo(print());
+	}
+	
+	@Test
+	public void testUserLogin() throws Exception {
+		testUser.setVerified(true);
+		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
+		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
+
+		Mockito.when(userService.validateUserLogin(userRequest.getEmail(), userRequest.getPassword()))
+				.thenReturn(testUser);
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/login").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message").value(testUser.getEmail() + " login successfully"))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
 	}
 
 }
