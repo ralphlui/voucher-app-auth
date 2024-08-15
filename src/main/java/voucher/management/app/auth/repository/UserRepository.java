@@ -20,4 +20,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 	@Query("SELECT u FROM User u WHERE u.email = ?1 AND u.isActive = ?2")
 	public User findByEmailAndStatus(String email, boolean isActive,boolean isVerified);
 	
+	@Query("SELECT u FROM User u WHERE u.verificationCode = ?1 AND u.isVerified = ?2 AND u.isActive = ?3")
+	User findByVerificationCode(String verificationCode,boolean isVerified,boolean isActive);
+	
+	
 }
