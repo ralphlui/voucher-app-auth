@@ -129,7 +129,7 @@ public class UserController {
 
 	}
 	
-	@PostMapping(value = "/login", produces = "application/json")
+	@PostMapping(value = "/users/login", produces = "application/json")
 	public ResponseEntity<APIResponse<UserResponse>> validateUserLogin(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";

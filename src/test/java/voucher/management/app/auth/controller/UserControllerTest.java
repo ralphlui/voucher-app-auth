@@ -102,7 +102,7 @@ public class UserControllerTest {
 		Mockito.when(userService.validateUserLogin(userRequest.getEmail(), userRequest.getPassword()))
 				.thenReturn(testUser);
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/login").contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/users/login").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message").value(testUser.getEmail() + " login successfully"))
