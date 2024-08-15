@@ -21,6 +21,7 @@ import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.repository.UserRepository;
 import voucher.management.app.auth.service.IUserService;
 import voucher.management.app.auth.utility.DTOMapper;
+import voucher.management.app.auth.utility.EncryptionUtils;
 
 @Service
 public class UserService implements IUserService  {
@@ -32,6 +33,9 @@ public class UserService implements IUserService  {
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private EncryptionUtils encryptionUtils;
 
 	@Override
 	public Map<Long, List<UserDTO>> findByIsActiveTrue(Pageable pageable) {
@@ -68,7 +72,6 @@ public class UserService implements IUserService  {
 			user.setVerified(false);
 			user.setActive(true);
 			user.setCreatedDate(LocalDateTime.now());
-
 			User createdUser = userRepository.save(user);
 
 			if (createdUser != null) {
@@ -102,6 +105,30 @@ public class UserService implements IUserService  {
 			}
 		} catch (Exception e) {
 			logger.error("Error occurred while validateUserLogin, " + e.toString());
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public UserDTO verify(String verificationCode) {
+
+		try {
+			String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);
+
+			User user = userRepository.findByVerificationCode(decodedVerificationCode, false, true);
+
+			if (user != null) {
+				user.setVerified(true);
+				user.setUpdatedDate(LocalDateTime.now());
+				User updatedUser = userRepository.save(user);
+				if (updatedUser != null) {
+					return DTOMapper.toUserDTO(updatedUser);
+				}
+
+			}
+		} catch (Exception e) {
+			logger.error("Error occurred while user verify, " + e.toString());
 			e.printStackTrace();
 		}
 		return null;

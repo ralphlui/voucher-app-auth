@@ -16,4 +16,6 @@ public interface IUserService {
 	 User findByEmail(String email);
 	 
 	 User validateUserLogin(String email, String password);
+	 
+	 UserDTO verify(String verifyId);
 }
