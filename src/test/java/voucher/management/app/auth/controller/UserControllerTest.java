@@ -36,6 +36,7 @@ import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.RoleType;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.utility.DTOMapper;
+import voucher.management.app.auth.utility.EncryptionUtils;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -53,6 +54,10 @@ public class UserControllerTest {
 	
 	@Autowired
 	private ObjectMapper objectMapper;
+	
+	@Autowired
+	private EncryptionUtils encryptionUtils;
+
 	
 	User testUser;
 
@@ -104,6 +109,45 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+	}
+	
+
+
+	@Test
+	public void testVerifyUser() throws Exception {
+
+		String decodedVerificationCode = "7f03a9a9-d7a5-4742-bc85-68d52b2bee45";
+		String verificationCode = encryptionUtils.encrypt(decodedVerificationCode);
+		testUser.setVerified(false);
+		testUser.setActive(true);
+		testUser.setVerificationCode(decodedVerificationCode);
+		Mockito.when(userService.findByEmailAndStatus(testUser.getEmail(), true, true)).thenReturn(testUser);
+
+		Mockito.when(userService.verify(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
+
+		mockMvc.perform(MockMvcRequestBuilders.put("/voucherapp/users/verify/{verifyid}", verificationCode)
+				).andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(true)).andDo(print());
+	}
+	
+
+	@Test
+	public void testCreateUser() throws Exception {
+		Mockito.when(userService.create(Mockito.any(User.class)))
+	   .thenReturn(testUser);
+		
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/users")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(testUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+
+
+
 	}
 
 }
