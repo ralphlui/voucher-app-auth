@@ -12,7 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +28,7 @@ import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
+import voucher.management.app.auth.utility.GeneralUtility;
 
 import org.springframework.data.domain.Sort;
 
@@ -157,6 +160,39 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error("Error: " + e.toString()));
 		}
+	}
+	
+	@PutMapping(value = "/users/verify/{verifyid}", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
+		verifyid = GeneralUtility.makeNotNull(verifyid);
+		logger.info("Call user verify API with verifyToken={}", verifyid);
+
+		String message = "";
+		try {
+			if (!verifyid.isEmpty()) {
+				UserDTO userDTO = userService.verify(verifyid);
+				if (userDTO != null) {
+					message = "User successfully verified.";
+
+					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+
+				} else {
+
+					message = "Vefriy user failed: Verfiy Id is invalid or already verified.";
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+				}
+			} else {
+
+				message = "Vefriy Id could not be blank.";
+				logger.error(message);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			message = "Error: " + e.toString();
+			logger.error(message);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+		}
+
 	}
 
 }
