@@ -18,4 +18,6 @@ public interface IUserService {
 	 User validateUserLogin(String email, String password);
 	 
 	 UserDTO verify(String verifyId);
+	 
+	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 }

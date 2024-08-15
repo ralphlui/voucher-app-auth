@@ -133,5 +133,12 @@ public class UserService implements IUserService  {
 		}
 		return null;
 	}
+	
+
+	@Override
+	public User findByEmailAndStatus(String email, boolean isActive, boolean isVerified) {
+
+		return userRepository.findByEmailAndStatus(email, isActive, isVerified);
+	}
 
 }
