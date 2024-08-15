@@ -28,6 +28,7 @@ import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.RoleType;
 import voucher.management.app.auth.repository.UserRepository;
 import voucher.management.app.auth.service.impl.UserService;
+import voucher.management.app.auth.utility.EncryptionUtils;
 
 @SpringBootTest
 @Transactional
@@ -45,6 +46,9 @@ public class UserServiceTest {
 	
 	@MockBean
 	private PasswordEncoder passwordEncoder;
+	
+	@MockBean
+	private EncryptionUtils encryptionUtils;
 
 	
 	private static User user = new User("admin12345@gmail.com", "Admin", "Pwd@123", RoleType.ADMIN, true);
@@ -98,5 +102,22 @@ public class UserServiceTest {
 
         assertEquals(user, result);
     }
+	
+
+	@Test
+	public void verifyUser() throws Exception {
+		String decodedVerificationCode = "7f03a9a9-d7a5-4742-bc85-68d52b2bee45";
+		String verificationCode = encryptionUtils.encrypt(decodedVerificationCode);
+		user.setVerified(false);
+
+		Mockito.when(encryptionUtils.decrypt(verificationCode)).thenReturn(decodedVerificationCode);
+		Mockito.when(userRepository.findByVerificationCode(decodedVerificationCode, false, true)).thenReturn(user);
+		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
+
+		UserDTO userDTO = userService.verify(verificationCode);
+
+		assertThat(user.isVerified()).isTrue();
+		assertThat(userDTO).isNotNull();
+	}
 
 }
