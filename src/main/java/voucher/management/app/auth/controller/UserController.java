@@ -46,7 +46,7 @@ public class UserController {
 
 
 	@GetMapping(value = "/users", produces = "application/json")
-	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUser(@RequestParam(defaultValue = "0") int page,
+	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsers(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API with page={}, size={}", page, size);
 		long totalRecord = 0;
@@ -54,7 +54,7 @@ public class UserController {
 		try {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
-			Map<Long, List<UserDTO>> resultMap = userService.findByIsActiveTrue(pageable);
+			Map<Long, List<UserDTO>> resultMap = userService.findActiveUsers(pageable);
 
 			if (resultMap.size() == 0) {
 				String message = "User not found.";
@@ -99,7 +99,7 @@ public class UserController {
 			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
 			if (validationResult.isValid()) {
 	
-				User createdUser  = userService.create(user);
+				User createdUser  = userService.createUser(user);
 				
 				if (createdUser != null && !createdUser.getEmail().isEmpty()) {
 					UserResponse userResp = new UserResponse();
@@ -130,7 +130,7 @@ public class UserController {
 	}
 	
 	@PostMapping(value = "/users/login", produces = "application/json")
-	public ResponseEntity<APIResponse<UserResponse>> validateUserLogin(@RequestBody UserRequest userRequest) {
+	public ResponseEntity<APIResponse<UserResponse>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";
 
@@ -141,7 +141,7 @@ public class UserController {
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.validateUserLogin(userRequest.getEmail(), userRequest.getPassword());
+			User user = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
 			if (user != null) {
 				UserResponse userResp = new UserResponse();
 				userResp.setEmail(user.getEmail());
@@ -170,7 +170,7 @@ public class UserController {
 		String message = "";
 		try {
 			if (!verifyid.isEmpty()) {
-				UserDTO userDTO = userService.verify(verifyid);
+				UserDTO userDTO = userService.verifyUser(verifyid);
 				if (userDTO != null) {
 					message = "User successfully verified.";
 

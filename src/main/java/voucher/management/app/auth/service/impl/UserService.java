@@ -38,7 +38,7 @@ public class UserService implements IUserService  {
 	private EncryptionUtils encryptionUtils;
 
 	@Override
-	public Map<Long, List<UserDTO>> findByIsActiveTrue(Pageable pageable) {
+	public Map<Long, List<UserDTO>> findActiveUsers(Pageable pageable) {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		List<UserDTO> userDTOList = new ArrayList<>();
 		try {
@@ -63,7 +63,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User create(User user) {
+	public User createUser(User user) {
 		try {
 			String encodedPassword = passwordEncoder.encode(user.getPassword());
 			user.setPassword(encodedPassword);
@@ -97,7 +97,7 @@ public class UserService implements IUserService  {
 
 
 	@Override
-	public User validateUserLogin(String email, String password) {
+	public User loginUser(String email, String password) {
 		try {
 			User user = userRepository.findByEmailAndStatus(email, true, true);
 			if (user != null && passwordEncoder.matches(password, user.getPassword())) {
@@ -111,7 +111,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public UserDTO verify(String verificationCode) {
+	public UserDTO verifyUser(String verificationCode) {
 
 		try {
 			String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);

@@ -68,7 +68,7 @@ public class UserServiceTest {
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
 
 		Mockito.when(userRepository.findByIsActiveTrue(pageable)).thenReturn(mockUserPages);
-		Map<Long, List<UserDTO>> userPages = userService.findByIsActiveTrue(pageable);
+		Map<Long, List<UserDTO>> userPages = userService.findActiveUsers(pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {
 			totalRecord = entry.getKey();
@@ -86,7 +86,7 @@ public class UserServiceTest {
 
 		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
-		User createdUser = userService.create(user);
+		User createdUser = userService.createUser(user);
 		assertThat(createdUser).isNotNull();
 		assertThat(createdUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
@@ -98,7 +98,7 @@ public class UserServiceTest {
         Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
         Mockito.when(passwordEncoder.matches(user.getPassword(), user.getPassword())).thenReturn(true);
 
-        User result = userService.validateUserLogin(user.getEmail(), user.getPassword());
+        User result = userService.loginUser(user.getEmail(), user.getPassword());
 
         assertEquals(user, result);
     }
@@ -114,7 +114,7 @@ public class UserServiceTest {
 		Mockito.when(userRepository.findByVerificationCode(decodedVerificationCode, false, true)).thenReturn(user);
 		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
-		UserDTO userDTO = userService.verify(verificationCode);
+		UserDTO userDTO = userService.verifyUser(verificationCode);
 
 		assertThat(user.isVerified()).isTrue();
 		assertThat(userDTO).isNotNull();

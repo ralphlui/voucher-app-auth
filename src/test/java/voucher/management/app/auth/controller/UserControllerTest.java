@@ -84,7 +84,7 @@ public class UserControllerTest {
 		Map<Long, List<UserDTO>> mockUserMap = new HashMap<>();
 		mockUserMap.put(0L, mockUsers);
 
-		Mockito.when(userService.findByIsActiveTrue(pageable)).thenReturn(mockUserMap);
+		Mockito.when(userService.findActiveUsers(pageable)).thenReturn(mockUserMap);
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/voucherapp/users").param("page", "0").param("size", "10")
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
@@ -99,7 +99,7 @@ public class UserControllerTest {
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
-		Mockito.when(userService.validateUserLogin(userRequest.getEmail(), userRequest.getPassword()))
+		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword()))
 				.thenReturn(testUser);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/users/login").contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +123,7 @@ public class UserControllerTest {
 		testUser.setVerificationCode(decodedVerificationCode);
 		Mockito.when(userService.findByEmailAndStatus(testUser.getEmail(), true, true)).thenReturn(testUser);
 
-		Mockito.when(userService.verify(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
+		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/voucherapp/users/verify/{verifyid}", verificationCode)
 				).andExpect(MockMvcResultMatchers.status().isOk())
@@ -134,7 +134,7 @@ public class UserControllerTest {
 
 	@Test
 	public void testCreateUser() throws Exception {
-		Mockito.when(userService.create(Mockito.any(User.class)))
+		Mockito.when(userService.createUser(Mockito.any(User.class)))
 	   .thenReturn(testUser);
 		
 

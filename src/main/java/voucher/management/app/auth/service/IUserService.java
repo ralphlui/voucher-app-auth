@@ -9,15 +9,15 @@ import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.entity.User;
 
 public interface IUserService {
-	Map<Long, List<UserDTO>> findByIsActiveTrue(Pageable pageable);
+	Map<Long, List<UserDTO>> findActiveUsers(Pageable pageable);
 	
-	 User create(User user);
+	 User createUser(User user);
 	 
 	 User findByEmail(String email);
 	 
-	 User validateUserLogin(String email, String password);
+	 User loginUser(String email, String password);
 	 
-	 UserDTO verify(String verifyId);
+	 UserDTO verifyUser(String verifyId);
 	 
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 }
