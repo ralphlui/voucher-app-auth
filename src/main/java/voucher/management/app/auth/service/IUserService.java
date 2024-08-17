@@ -20,4 +20,6 @@ public interface IUserService {
 	 UserDTO verifyUser(String verifyId);
 	 
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
+	 
+	 User update(User user);
 }

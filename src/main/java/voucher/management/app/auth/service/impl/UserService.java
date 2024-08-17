@@ -140,5 +140,22 @@ public class UserService implements IUserService  {
 
 		return userRepository.findByEmailAndStatus(email, isActive, isVerified);
 	}
+	
+	@Override
+	public User update(User user) {
+		try {
+
+			user.setPassword(passwordEncoder.encode(user.getPassword()));
+			user.setUpdatedDate(LocalDateTime.now());
+			return userRepository.save(user);
+
+		} catch (Exception e) {
+			logger.error("Error occurred while user updating, " + e.toString());
+			e.printStackTrace();
+
+		}
+
+		return new User();
+	}
 
 }
