@@ -3,6 +3,7 @@ package voucher.management.app.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +119,21 @@ public class UserServiceTest {
 
 		assertThat(user.isVerified()).isTrue();
 		assertThat(userDTO).isNotNull();
+	}
+	
+	@Test
+	void updateUser() {
+
+		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
+		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+		user.setActive(true);
+		user.setUsername("test12");
+		user.setUpdatedDate(LocalDateTime.now());
+
+		User updatedUser = userService.update(user);
+		assertThat(updatedUser).isNotNull();
+		assertThat(updatedUser.getEmail().equals("admin12345@gmail.com")).isTrue();
+
 	}
 
 }
