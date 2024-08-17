@@ -7,4 +7,6 @@ public interface IAPIHelperValidationStrategy<T> {
 	ValidationResult validateCreation(T data) ;
 	
 	ValidationResult validateObject(String data);
+	
+	ValidationResult validateUpdating(T data) ;
 }
