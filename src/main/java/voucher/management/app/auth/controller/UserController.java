@@ -28,6 +28,7 @@ import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
+import voucher.management.app.auth.utility.DTOMapper;
 import voucher.management.app.auth.utility.GeneralUtility;
 
 import org.springframework.data.domain.Sort;
@@ -35,15 +36,14 @@ import org.springframework.data.domain.Sort;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-	
+
 	@Autowired
 	private UserService userService;
-	
+
 	@Autowired
 	private UserValidationStrategy userValidationStrategy;
-
 
 	@GetMapping(value = "", produces = "application/json")
 	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsers(@RequestParam(defaultValue = "0") int page,
@@ -89,7 +89,7 @@ public class UserController {
 					.body(APIResponse.error("Error: " + e.getMessage()));
 		}
 	}
-	
+
 	@PostMapping(value = "", produces = "application/json")
 	public ResponseEntity<APIResponse<UserResponse>> createUser(@RequestBody User user) {
 		logger.info("Call user create API...");
@@ -98,17 +98,16 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
 			if (validationResult.isValid()) {
-	
-				User createdUser  = userService.createUser(user);
-				
+
+				User createdUser = userService.createUser(user);
+
 				if (createdUser != null && !createdUser.getEmail().isEmpty()) {
 					UserResponse userResp = new UserResponse();
 					userResp.setEmail(user.getEmail());
 					userResp.setUsername(user.getUsername());
 					userResp.setRole(user.getRole());
 					message = user.getEmail() + " is created successfully";
-					return ResponseEntity.status(HttpStatus.OK)
-							.body(APIResponse.success(userResp, message));
+					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
 				} else {
 					message = "User registraiton is not successful.";
 					logger.error(message);
@@ -117,18 +116,16 @@ public class UserController {
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body(APIResponse.error(message));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
 			message = "Error: " + e.toString();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error(message));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
 		}
 
 	}
-	
+
 	@PostMapping(value = "/login", produces = "application/json")
 	public ResponseEntity<APIResponse<UserResponse>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
@@ -148,12 +145,10 @@ public class UserController {
 				userResp.setUsername(user.getUsername());
 				userResp.setRole(user.getRole());
 				message = user.getEmail() + " login successfully";
-				return ResponseEntity.status(HttpStatus.OK)
-						.body(APIResponse.success(userResp, message));
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
 			} else {
 				message = "Invalid credentials.";
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-						.body(APIResponse.error(message));
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
@@ -161,7 +156,7 @@ public class UserController {
 					.body(APIResponse.error("Error: " + e.toString()));
 		}
 	}
-	
+
 	@PutMapping(value = "/verify/{verifyid}", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
 		verifyid = GeneralUtility.makeNotNull(verifyid);
@@ -194,9 +189,9 @@ public class UserController {
 		}
 
 	}
-	
+
 	@PutMapping(value = "/resetPassword", produces = "application/json")
-	public ResponseEntity<APIResponse<UserResponse>>  resetPassword(@RequestBody UserRequest resetPwdReq) {
+	public ResponseEntity<APIResponse<UserResponse>> resetPassword(@RequestBody UserRequest resetPwdReq) {
 
 		logger.info("Call user resetPassword API...");
 
@@ -204,50 +199,95 @@ public class UserController {
 
 		String message = "";
 		try {
-			
+
 			ValidationResult validationResult = userValidationStrategy.validateObject(resetPwdReq.getEmail());
 			if (!validationResult.isValid()) {
-			    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-				User dbUser = userService.findByEmailAndStatus(resetPwdReq.getEmail(), true, true);
-				if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
+			User dbUser = userService.findByEmailAndStatus(resetPwdReq.getEmail(), true, true);
+			if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
 
-					dbUser.setPassword(resetPwdReq.getPassword());
-					User modifiedUser = userService.update(dbUser);
+				dbUser.setPassword(resetPwdReq.getPassword());
+				User modifiedUser = userService.update(dbUser);
 
-					if (!GeneralUtility.makeNotNull(modifiedUser).equals("")) {
-						message = "Reset Password Completed.";
-						logger.info(message + resetPwdReq.getEmail());
-						UserResponse userResp = new UserResponse();
-						userResp.setEmail(modifiedUser.getEmail());
-						userResp.setUsername(modifiedUser.getUsername());
-						userResp.setRole(modifiedUser.getRole());
-						return ResponseEntity.status(HttpStatus.OK)
-								.body(APIResponse.success(userResp, message));
-					} else {
-						message = "Reset Password failed: Unable to reset password for the user with email :"
-								+ resetPwdReq.getEmail();
-						logger.error(message);
-						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-								.body(APIResponse.error(message));
-
-					}
+				if (!GeneralUtility.makeNotNull(modifiedUser).equals("")) {
+					message = "Reset Password Completed.";
+					logger.info(message + resetPwdReq.getEmail());
+					UserResponse userResp = new UserResponse();
+					userResp.setEmail(modifiedUser.getEmail());
+					userResp.setUsername(modifiedUser.getUsername());
+					userResp.setRole(modifiedUser.getRole());
+					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
 				} else {
-					message = "Reset Password failed: Unable to find the user with email :" + resetPwdReq.getEmail();
+					message = "Reset Password failed: Unable to reset password for the user with email :"
+							+ resetPwdReq.getEmail();
 					logger.error(message);
-					return ResponseEntity.status(HttpStatus.NOT_FOUND)
-							.body(APIResponse.error(message));
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+
 				}
-			
+			} else {
+				message = "Reset Password failed: Unable to find the user with email :" + resetPwdReq.getEmail();
+				logger.error(message);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+			}
+
 		} catch (Exception e) {
 			logger.error("Error, " + e.toString());
 			e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error("Error, " + e.toString()));
 		}
 
+	}
+
+	@PutMapping(value = "", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> updateUser(@RequestBody User user) {
+		logger.info("Call user update API...");
+		String message;
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateUpdating(user);
+			if (validationResult.isValid()) {
+				User dbUser = userService.findByEmail(user.getEmail());
+				if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
+					dbUser.setUsername(user.getUsername());
+					dbUser.setPassword(user.getPassword());
+					dbUser.setRole(user.getRole());
+					dbUser.setActive(user.isActive());
+					dbUser.setImage(user.getImage());
+
+					User updatedUser = userService.update(dbUser);
+					if (!GeneralUtility.makeNotNull(updatedUser).equals("")) {
+						UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+						message = "User updated successfully.";
+						logger.info(message + user.getEmail());
+						return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+					} else {
+						message = "Update user failed: Changes could not be applied to the user with email: "
+								+ user.getEmail();
+						logger.error(message);
+						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+
+					}
+				} else {
+					message = "User not found.";
+					logger.error(message);
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+				}
+			} else {
+				message = validationResult.getMessage();
+				logger.error(message);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(APIResponse.error(validationResult.getMessage()));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			message = "Error: " + e.toString();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error("Error, " + e.toString()));
+		}
 	}
 
 }
