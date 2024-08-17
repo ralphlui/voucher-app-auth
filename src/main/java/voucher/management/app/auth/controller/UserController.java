@@ -194,5 +194,60 @@ public class UserController {
 		}
 
 	}
+	
+	@PutMapping(value = "/resetPassword", produces = "application/json")
+	public ResponseEntity<APIResponse<UserResponse>>  resetPassword(@RequestBody UserRequest resetPwdReq) {
+
+		logger.info("Call user resetPassword API...");
+
+		logger.info("Reset Password : " + resetPwdReq.getEmail());
+
+		String message = "";
+		try {
+			
+			ValidationResult validationResult = userValidationStrategy.validateObject(resetPwdReq.getEmail());
+			if (!validationResult.isValid()) {
+			    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(APIResponse.error(validationResult.getMessage()));
+			}
+
+				User dbUser = userService.findByEmailAndStatus(resetPwdReq.getEmail(), true, true);
+				if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
+
+					dbUser.setPassword(resetPwdReq.getPassword());
+					User modifiedUser = userService.update(dbUser);
+
+					if (!GeneralUtility.makeNotNull(modifiedUser).equals("")) {
+						message = "Reset Password Completed.";
+						logger.info(message + resetPwdReq.getEmail());
+						UserResponse userResp = new UserResponse();
+						userResp.setEmail(modifiedUser.getEmail());
+						userResp.setUsername(modifiedUser.getUsername());
+						userResp.setRole(modifiedUser.getRole());
+						return ResponseEntity.status(HttpStatus.OK)
+								.body(APIResponse.success(userResp, message));
+					} else {
+						message = "Reset Password failed: Unable to reset password for the user with email :"
+								+ resetPwdReq.getEmail();
+						logger.error(message);
+						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+								.body(APIResponse.error(message));
+
+					}
+				} else {
+					message = "Reset Password failed: Unable to find the user with email :" + resetPwdReq.getEmail();
+					logger.error(message);
+					return ResponseEntity.status(HttpStatus.NOT_FOUND)
+							.body(APIResponse.error(message));
+				}
+			
+		} catch (Exception e) {
+			logger.error("Error, " + e.toString());
+			e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error("Error, " + e.toString()));
+		}
+
+	}
 
 }
