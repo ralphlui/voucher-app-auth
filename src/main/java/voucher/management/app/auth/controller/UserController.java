@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
-import voucher.management.app.auth.dto.UserResponse;
 import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.service.impl.UserService;
@@ -91,7 +90,7 @@ public class UserController {
 	}
 
 	@PostMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserResponse>> createUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody User user) {
 		logger.info("Call user create API...");
 		String message;
 
@@ -102,12 +101,9 @@ public class UserController {
 				User createdUser = userService.createUser(user);
 
 				if (createdUser != null && !createdUser.getEmail().isEmpty()) {
-					UserResponse userResp = new UserResponse();
-					userResp.setEmail(user.getEmail());
-					userResp.setUsername(user.getUsername());
-					userResp.setRole(user.getRole());
+					UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
 					message = user.getEmail() + " is created successfully";
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
+					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 				} else {
 					message = "User registraiton is not successful.";
 					logger.error(message);
@@ -127,7 +123,7 @@ public class UserController {
 	}
 
 	@PostMapping(value = "/login", produces = "application/json")
-	public ResponseEntity<APIResponse<UserResponse>> loginUser(@RequestBody UserRequest userRequest) {
+	public ResponseEntity<APIResponse<UserDTO>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";
 
@@ -140,12 +136,9 @@ public class UserController {
 
 			User user = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
 			if (user != null) {
-				UserResponse userResp = new UserResponse();
-				userResp.setEmail(user.getEmail());
-				userResp.setUsername(user.getUsername());
-				userResp.setRole(user.getRole());
+				UserDTO userDTO = DTOMapper.toUserDTO(user);
 				message = user.getEmail() + " login successfully";
-				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = "Invalid credentials.";
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(APIResponse.error(message));
@@ -191,7 +184,7 @@ public class UserController {
 	}
 
 	@PutMapping(value = "/resetPassword", produces = "application/json")
-	public ResponseEntity<APIResponse<UserResponse>> resetPassword(@RequestBody UserRequest resetPwdReq) {
+	public ResponseEntity<APIResponse<UserDTO>> resetPassword(@RequestBody UserRequest resetPwdReq) {
 
 		logger.info("Call user resetPassword API...");
 
@@ -215,11 +208,8 @@ public class UserController {
 				if (!GeneralUtility.makeNotNull(modifiedUser).equals("")) {
 					message = "Reset Password Completed.";
 					logger.info(message + resetPwdReq.getEmail());
-					UserResponse userResp = new UserResponse();
-					userResp.setEmail(modifiedUser.getEmail());
-					userResp.setUsername(modifiedUser.getUsername());
-					userResp.setRole(modifiedUser.getRole());
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userResp, message));
+					UserDTO userDTO = DTOMapper.toUserDTO(modifiedUser);
+					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 				} else {
 					message = "Reset Password failed: Unable to reset password for the user with email :"
 							+ resetPwdReq.getEmail();
