@@ -179,6 +179,14 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+		
+		User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(errorUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message").value("User not found."))
+				.andDo(print());
     
 	}
 }
