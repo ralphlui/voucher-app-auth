@@ -86,7 +86,7 @@ public class UserControllerTest {
 
 		Mockito.when(userService.findActiveUsers(pageable)).thenReturn(mockUserMap);
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/voucherapp/users").param("page", "0").param("size", "10")
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users").param("page", "0").param("size", "10")
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -102,7 +102,7 @@ public class UserControllerTest {
 		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword()))
 				.thenReturn(testUser);
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/users/login").contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message").value(testUser.getEmail() + " login successfully"))
@@ -125,7 +125,7 @@ public class UserControllerTest {
 
 		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/voucherapp/users/verify/{verifyid}", verificationCode)
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", verificationCode)
 				).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());
@@ -138,7 +138,7 @@ public class UserControllerTest {
 	   .thenReturn(testUser);
 		
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/voucherapp/users")
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(testUser)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))

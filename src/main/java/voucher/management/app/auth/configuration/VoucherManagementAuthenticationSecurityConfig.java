@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 @EnableWebSecurity
 public class VoucherManagementAuthenticationSecurityConfig {
-    private static final String[] SECURED_URLs = { "/voucherapp/**" };
+    private static final String[] SECURED_URLs = { "/api/**" };
     
 	@Bean
 	public PasswordEncoder passwordEncoder() {

@@ -33,7 +33,7 @@ import voucher.management.app.auth.utility.GeneralUtility;
 import org.springframework.data.domain.Sort;
 
 @RestController
-@RequestMapping("/voucherapp")
+@RequestMapping("/api/users")
 public class UserController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -45,7 +45,7 @@ public class UserController {
 	private UserValidationStrategy userValidationStrategy;
 
 
-	@GetMapping(value = "/users", produces = "application/json")
+	@GetMapping(value = "", produces = "application/json")
 	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsers(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API with page={}, size={}", page, size);
@@ -90,7 +90,7 @@ public class UserController {
 		}
 	}
 	
-	@PostMapping(value = "/users", produces = "application/json")
+	@PostMapping(value = "", produces = "application/json")
 	public ResponseEntity<APIResponse<UserResponse>> createUser(@RequestBody User user) {
 		logger.info("Call user create API...");
 		String message;
@@ -129,7 +129,7 @@ public class UserController {
 
 	}
 	
-	@PostMapping(value = "/users/login", produces = "application/json")
+	@PostMapping(value = "/login", produces = "application/json")
 	public ResponseEntity<APIResponse<UserResponse>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";
@@ -162,7 +162,7 @@ public class UserController {
 		}
 	}
 	
-	@PutMapping(value = "/users/verify/{verifyid}", produces = "application/json")
+	@PutMapping(value = "/verify/{verifyid}", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
 		verifyid = GeneralUtility.makeNotNull(verifyid);
 		logger.info("Call user verify API with verifyToken={}", verifyid);
