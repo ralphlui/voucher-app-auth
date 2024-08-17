@@ -145,8 +145,22 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+    }
+	
+	
+	@Test
+	public void testResetPassword() throws Exception {
+		testUser.setVerified(true);
+		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
+		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
+		Mockito.when(userService.update(testUser)).thenReturn(testUser);
+		Mockito.when(userService.findByEmailAndStatus(testUser.getEmail(),true,true)).thenReturn(testUser);
+		
 
-
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message").value("Reset Password Completed.")).andDo(print());
 
 	}
 
