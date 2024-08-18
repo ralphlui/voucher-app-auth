@@ -69,6 +69,11 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope> <!-- Ensure it's in the test scope -->
 		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk</artifactId>
+			<version>1.12.655</version>
+		</dependency>
 	</dependencies>
 
 	<build>
