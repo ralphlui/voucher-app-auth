@@ -1,5 +1,6 @@
 package voucher.management.app.auth.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,10 +17,44 @@ import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+
 @Configuration
 @EnableWebSecurity
 public class VoucherManagementAuthenticationSecurityConfig {
     private static final String[] SECURED_URLs = { "/api/**" };
+    
+    
+    @Value("${aws.region}")
+	private String awsRegion;
+
+	@Value("${aws.accesskey}")
+	private String awsAccessKey;
+
+	@Value("${aws.secretkey}")
+	private String awsSecretKey;
+	
+	@Value("${aws.ses.from}")
+	private String emailFrom;
+	
+	@Value("${frontend.url}")
+	private String frontEndUrl;
+
+	
+	@Bean
+	public String getEmailFrom() {
+		return emailFrom;
+	}
+	
+	@Bean
+	public String getFrontEndUrl() {
+		return frontEndUrl;
+	}
+
     
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -52,6 +87,14 @@ public class VoucherManagementAuthenticationSecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
+	}
+	
+	@Bean
+	public AmazonSimpleEmailService sesClient() {
+		AWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+		AmazonSimpleEmailService sesClient = AmazonSimpleEmailServiceClientBuilder.standard()
+				.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).withRegion(awsRegion).build();
+		return sesClient;
 	}
 
 }

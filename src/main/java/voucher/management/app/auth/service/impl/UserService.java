@@ -2,6 +2,7 @@ package voucher.management.app.auth.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +15,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+
 import org.springframework.data.domain.Page;
 
+import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.repository.UserRepository;
 import voucher.management.app.auth.service.IUserService;
+import voucher.management.app.auth.utility.AmazonSES;
 import voucher.management.app.auth.utility.DTOMapper;
 import voucher.management.app.auth.utility.EncryptionUtils;
 
@@ -36,6 +42,9 @@ public class UserService implements IUserService  {
 	
 	@Autowired
 	private EncryptionUtils encryptionUtils;
+	
+	@Autowired
+	private VoucherManagementAuthenticationSecurityConfig securityConfig;
 
 	@Override
 	public Map<Long, List<UserDTO>> findActiveUsers(Pageable pageable) {
@@ -75,7 +84,7 @@ public class UserService implements IUserService  {
 			User createdUser = userRepository.save(user);
 
 			if (createdUser != null) {
-				//sendVerificationEmail(createdUser);
+				sendVerificationEmail(createdUser);
 			}
 
 			return createdUser;
@@ -156,6 +165,39 @@ public class UserService implements IUserService  {
 		}
 
 		return new User();
+	}
+	
+
+	public void sendVerificationEmail(User user) {
+
+		try {
+
+			AmazonSimpleEmailService client = securityConfig.sesClient();
+			String from = securityConfig.getEmailFrom().trim();
+			String clientURL = securityConfig.getFrontEndUrl().trim();
+
+			String to = user.getEmail();
+
+			String verificationCode = encryptionUtils.encrypt(user.getVerificationCode());
+
+			String verifyURL = clientURL + "/components/register/verify/" + verificationCode.trim();
+			logger.info("verifyURL... {}", verifyURL);
+
+			String subject = "Please verify your registration";
+			String body = "Dear [[name]],<br><br>" + "Thank you for choosing our service.<br>"
+					+ "To complete your registration, please click the link below to verify :<br>"
+					+ "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>" + "Thank you" + "<br><br>"
+					+ "<i>(This is an auto-generated email, please do not reply)</i>";
+
+			body = body.replace("[[name]]", user.getUsername());
+
+			body = body.replace("[[URL]]", verifyURL);
+
+			AmazonSES.sendEmail(client, from, Arrays.asList(to), subject, body);
+		} catch (Exception e) {
+			logger.error("Error occurred while sendVerificationEmail, " + e.toString());
+			e.printStackTrace();
+		}
 	}
 
 }
