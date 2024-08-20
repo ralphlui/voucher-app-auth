@@ -279,5 +279,35 @@ public class UserController {
 					.body(APIResponse.error("Error, " + e.toString()));
 		}
 	}
+	
+
+	@GetMapping(value = "/active", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@RequestBody UserRequest userRequest) {
+		logger.info("Call user active API...");
+		logger.info("email"+ userRequest.getEmail());
+		String message = "";
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
+			if (!validationResult.isValid()) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(APIResponse.error(validationResult.getMessage()));
+			}
+
+			User user = userService.findByEmail(userRequest.getEmail());
+			if (user != null) {
+				UserDTO userDTO = DTOMapper.toUserDTO(user);
+				message = user.getEmail() + " is Active";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+			} else {
+				message = "Invalid credentials.";
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error("Error: " + e.toString()));
+		}
+	}
 
 }
