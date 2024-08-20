@@ -61,13 +61,13 @@ public class User {
 	@Column(nullable = true, columnDefinition = "datetime")
 	private LocalDateTime lastLoginDate;
 
-	@Column(nullable = true)
-	private String image;
-
 	
 	@Column(nullable = false, columnDefinition = "varchar(255) default ''")
     private String verificationCode;
     
 	@Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isVerified;
+	
+	@Column(nullable = true)
+	private String preferences;
 }

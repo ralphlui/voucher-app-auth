@@ -246,7 +246,6 @@ public class UserController {
 					dbUser.setPassword(user.getPassword());
 					dbUser.setRole(user.getRole());
 					dbUser.setActive(user.isActive());
-					dbUser.setImage(user.getImage());
 
 					User updatedUser = userService.update(dbUser);
 					if (!GeneralUtility.makeNotNull(updatedUser).equals("")) {
