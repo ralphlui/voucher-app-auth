@@ -62,6 +62,7 @@ public class UserControllerTest {
 	User testUser;
 
 	private static List<UserDTO> mockUsers = new ArrayList<>();
+	User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 
 	@BeforeEach
 	void setUp() {
@@ -73,6 +74,7 @@ public class UserControllerTest {
 	@AfterEach
 	public void tearDown() {
 		testUser = new User();
+		errorUser = new User();
 
 	}
 
@@ -180,7 +182,6 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
 		
-		User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 		mockMvc.perform(MockMvcRequestBuilders.put("/api/users")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(errorUser)))
@@ -188,5 +189,27 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.message").value("User not found."))
 				.andDo(print());
     
+	}
+	
+	@Test
+	public void testActiveUser() throws Exception {
+		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
+		testUser.setVerified(true);
+		Mockito.when(userService.update(testUser)).thenReturn(testUser);
+
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(testUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.active").value(testUser.isActive())).andDo(print());
+		
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(errorUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false))
+				.andDo(print());
 	}
 }
