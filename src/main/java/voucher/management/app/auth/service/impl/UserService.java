@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.util.TextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,8 @@ public class UserService implements IUserService  {
 			user.setVerified(false);
 			user.setActive(true);
 			user.setCreatedDate(LocalDateTime.now());
+			String result = String.join(", ", user.getCategories());
+			user.setPreferences(result);
 			User createdUser = userRepository.save(user);
 
 			if (createdUser != null) {
