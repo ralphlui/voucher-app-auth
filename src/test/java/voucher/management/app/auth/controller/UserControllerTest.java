@@ -111,6 +111,29 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+		
+		UserRequest invalidCredentialsUserRequest = new UserRequest(testUser.getEmail(), "12345678");
+		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
+
+		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword()))
+				.thenReturn(testUser);
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(invalidCredentialsUserRequest))).andExpect(MockMvcResultMatchers.status().isUnauthorized())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message").value("Invalid credentials."))
+				.andExpect(jsonPath("$.success").value(false))
+				.andDo(print());
+		
+		
+		
+		UserRequest userNotFoundRequest = new UserRequest(errorUser.getEmail(), "Pwd@21212");
+		
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userNotFoundRequest))).andExpect(MockMvcResultMatchers.status().isBadRequest())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message").value("User account not found."))
+				.andExpect(jsonPath("$.success").value(false))
+				.andDo(print());
 	}
 	
 
@@ -131,6 +154,28 @@ public class UserControllerTest {
 				).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());
+		
+		
+		String errorDecodedVerificationCode = "7f03a9a9-d7a5-4742-bc85-68d52b2bee46";
+		String errorVerificationCode = encryptionUtils.encrypt(errorDecodedVerificationCode);
+		
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", errorVerificationCode)
+				).andExpect(MockMvcResultMatchers.status().isInternalServerError())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.message").value("Vefriy user failed: Verfiy Id is invalid or already verified.")).
+				andDo(print());
+		
+		
+		String errorDecodedVerificationCode2 = "";
+		String errorVerificationCode2 = encryptionUtils.encrypt(errorDecodedVerificationCode2);
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", errorVerificationCode2)
+				).andExpect(MockMvcResultMatchers.status().isInternalServerError())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false)).
+				andDo(print());
+		
+		
 	}
 	
 
@@ -147,6 +192,16 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+		
+		User errorUser = new User("", "Error", "Pwd@21212", RoleType.MERCHANT, true);
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(errorUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+		        .andExpect(jsonPath("$.success").value(false))
+		        .andExpect(jsonPath("$.message").value("Email cannot be empty."))
+		        .andDo(print());
+		
     }
 	
 	

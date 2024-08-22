@@ -135,5 +135,15 @@ public class UserServiceTest {
 		assertThat(updatedUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
 	}
+	
+	@Test
+    public void testFindByEmailAndStatus() {
+        
+        Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+
+        User result = userService.findByEmailAndStatus(user.getEmail(), true, true);
+
+        assertEquals(user, result);
+    }
 
 }
