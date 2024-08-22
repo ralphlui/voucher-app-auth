@@ -70,7 +70,7 @@ public class User {
 	@Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isVerified;
 	
-	@Column(nullable = true)
+	@Column(nullable = true, columnDefinition = "varchar(255)")
 	private String preferences;
 	
 	@Transient

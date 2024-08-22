@@ -82,8 +82,8 @@ public class UserService implements IUserService  {
 			user.setVerified(false);
 			user.setActive(true);
 			user.setCreatedDate(LocalDateTime.now());
-			String result = String.join(", ", user.getCategories());
-			user.setPreferences(result);
+			String preferences =  user.getCategories() == null ? "" : String.join(", ", user.getCategories());
+			user.setPreferences(preferences);
 			User createdUser = userRepository.save(user);
 
 			if (createdUser != null) {
