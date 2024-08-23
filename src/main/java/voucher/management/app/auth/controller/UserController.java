@@ -278,12 +278,11 @@ public class UserController {
 					.body(APIResponse.error("Error, " + e.toString()));
 		}
 	}
-	
 
 	@GetMapping(value = "/active", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user active API...");
-		logger.info("email"+ userRequest.getEmail());
+		logger.info("email" + userRequest.getEmail());
 		String message = "";
 
 		try {
@@ -306,6 +305,52 @@ public class UserController {
 			logger.error("Error: " + e.toString());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error("Error: " + e.toString()));
+		}
+	}
+
+	@GetMapping(value = "/preferences/{preference}", produces = "application/json")
+	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsersByPreferences(
+			@PathVariable("preference") String preference, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "500") int size) {
+		logger.info("Call user getAll API By Preferences with page={}, size={}", page, size);
+		long totalRecord = 0;
+
+		try {
+
+			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
+			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(preference,pageable);
+
+			if (resultMap.size() == 0) {
+				String message = "User not found.";
+				logger.error(message);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+			}
+
+			List<UserDTO> userDTOList = new ArrayList<UserDTO>();
+
+			for (Map.Entry<Long, List<UserDTO>> entry : resultMap.entrySet()) {
+				totalRecord = entry.getKey();
+				userDTOList = entry.getValue();
+
+				logger.info("totalRecord: " + totalRecord);
+				logger.info("userDTO List: " + userDTOList);
+
+			}
+
+			if (userDTOList.size() > 0) {
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(APIResponse.success(userDTOList, "Successfully get all active user by preferences.", totalRecord));
+
+			} else {
+				String message = "User not found.";
+				logger.error(message);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+			}
+
+		} catch (Exception e) {
+			logger.error("Error, " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(APIResponse.error("Error: " + e.getMessage()));
 		}
 	}
 

@@ -22,4 +22,6 @@ public interface IUserService {
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 	 
 	 User update(User user);
+	 
+	 Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable);
 }

@@ -202,4 +202,29 @@ public class UserService implements IUserService  {
 		}
 	}
 
+	@Override
+	public Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable) {
+		Map<Long, List<UserDTO>> result = new HashMap<>();
+		try {
+			Page<User> userPages = userRepository.findByPreferences(preferences, true, true, pageable);
+			long totalRecord = userPages.getTotalElements();
+			List<UserDTO> userDTOList = new ArrayList<>();
+			if (totalRecord > 0) {
+				for (User user : userPages.getContent()) {
+					UserDTO userDTO = DTOMapper.toUserDTO(user);
+					userDTOList.add(userDTO);
+				}
+
+			} else {
+				logger.info("User not found...");
+			}
+			result.put(totalRecord, userDTOList);
+
+		} catch (Exception ex) {
+			logger.error("findByIsActiveTrue exception... {}", ex.toString());
+
+		}
+		return result;
+	}
+
 }
