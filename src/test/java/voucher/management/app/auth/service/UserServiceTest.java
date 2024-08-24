@@ -145,5 +145,31 @@ public class UserServiceTest {
 
         assertEquals(user, result);
     }
+	
+	@Test
+	void getAllActiveUsersByPreferences() {
+
+		long totalRecord = 0;
+		List<UserDTO> userDTOList = new ArrayList<UserDTO>();
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
+
+		Mockito.when(userRepository.findByPreferences("clothing", true, true, pageable)).thenReturn(mockUserPages);
+		Map<Long, List<UserDTO>> userPages = userService.findUsersByPreferences("clothing", pageable);
+
+		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {
+			totalRecord = entry.getKey();
+			userDTOList = entry.getValue();
+
+		}
+		assertEquals(mockUsers.size(), userDTOList.size());
+		assertEquals(mockUsers.get(0).getEmail(), userDTOList.get(0).getEmail());
+		
+		
+		Map<Long, List<UserDTO>> userList = userService.findUsersByPreferences("shoes", pageable);
+		assertEquals(userList.size(), 0);
+
+
+	}
 
 }

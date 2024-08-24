@@ -250,21 +250,39 @@ public class UserControllerTest {
 	public void testActiveUser() throws Exception {
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
 		testUser.setVerified(true);
-		Mockito.when(userService.update(testUser)).thenReturn(testUser);
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active")
-				.contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(testUser)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.active").value(testUser.isActive())).andDo(print());
-		
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active")
-				.contentType(MediaType.APPLICATION_JSON)
+
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(errorUser)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false)).andDo(print());
+	}
+
+	@Test
+	public void testGetAllUsersByPreferences() throws Exception {
+
+		Pageable pageable = PageRequest.of(0, 10, Sort.by("username").ascending());
+		Map<Long, List<UserDTO>> mockUserMap = new HashMap<>();
+		mockUserMap.put(0L, mockUsers);
+
+		Mockito.when(userService.findUsersByPreferences("clothing", pageable)).thenReturn(mockUserMap);
+
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/preferences/{preference}", "clothing").param("page", "0")
+				.param("size", "10").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(MockMvcResultMatchers.status().isOk()).andExpect(jsonPath("$.success").value(true))
+				.andExpect(jsonPath("$.message").value("Successfully get all active user by preferences."))
 				.andDo(print());
+
+		Mockito.when(userService.findUsersByPreferences("shoes", pageable)).thenReturn(mockUserMap);
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/preferences/{preference}", "food").param("page", "0")
+				.param("size", "10").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false)).andDo(print());
+
 	}
 }
