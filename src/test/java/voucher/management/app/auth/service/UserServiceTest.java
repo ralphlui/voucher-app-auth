@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import jakarta.transaction.Transactional;
 import voucher.management.app.auth.dto.UserDTO;
+import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.RoleType;
 import voucher.management.app.auth.repository.UserRepository;
@@ -56,6 +57,7 @@ public class UserServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		user.setPreferences("food");
 		mockUsers.add(user);
 
 	}
@@ -63,7 +65,6 @@ public class UserServiceTest {
 	@Test
 	void getAllActiveUsers() {
 
-		long totalRecord = 0;
 		List<UserDTO> userDTOList = new ArrayList<UserDTO>();
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
@@ -72,7 +73,6 @@ public class UserServiceTest {
 		Map<Long, List<UserDTO>> userPages = userService.findActiveUsers(pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {
-			totalRecord = entry.getKey();
 			userDTOList = entry.getValue();
 
 		}
@@ -115,23 +115,25 @@ public class UserServiceTest {
 		Mockito.when(userRepository.findByVerificationCode(decodedVerificationCode, false, true)).thenReturn(user);
 		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
-		UserDTO userDTO = userService.verifyUser(verificationCode);
+		User verifiedUser = userService.verifyUser(verificationCode);
 
 		assertThat(user.isVerified()).isTrue();
-		assertThat(userDTO).isNotNull();
+		assertThat(verifiedUser).isNotNull();
 	}
 	
 	@Test
-	void updateUser() {
+	void updateUser() throws Exception {
 
-		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
-		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		user.setActive(true);
 		user.setUsername("test12");
+		user.setCategories(new ArrayList<>());
 		user.setUpdatedDate(LocalDateTime.now());
+		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
+
+		Mockito.when(userRepository.save(user)).thenReturn(user);
+		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 
 		User updatedUser = userService.update(user);
-		assertThat(updatedUser).isNotNull();
 		assertThat(updatedUser.getEmail().equals("admin12345@gmail.com")).isTrue();
 
 	}
@@ -149,16 +151,14 @@ public class UserServiceTest {
 	@Test
 	void getAllActiveUsersByPreferences() {
 
-		long totalRecord = 0;
 		List<UserDTO> userDTOList = new ArrayList<UserDTO>();
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
 
-		Mockito.when(userRepository.findByPreferences("clothing", true, true, pageable)).thenReturn(mockUserPages);
+		Mockito.when(userRepository.findByPreferences("clothing", true, pageable)).thenReturn(mockUserPages);
 		Map<Long, List<UserDTO>> userPages = userService.findUsersByPreferences("clothing", pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {
-			totalRecord = entry.getKey();
 			userDTOList = entry.getValue();
 
 		}
@@ -167,9 +167,32 @@ public class UserServiceTest {
 		
 		
 		Map<Long, List<UserDTO>> userList = userService.findUsersByPreferences("shoes", pageable);
-		assertEquals(userList.size(), 0);
+		assertEquals(userList, null);
 
 
+	}
+	
+	@Test
+	void resetPassword() throws Exception {
+
+		Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+		Mockito.when(userRepository.save(user)).thenReturn(user);
+     
+
+    	UserRequest userRequest = new UserRequest(user.getEmail(), "Pwd@21212");
+		User updatedUser = userService.resetPassword(userRequest);
+		assertThat(updatedUser.getEmail().equals("admin12345@gmail.com")).isTrue();
+
+	}
+	
+	@Test
+	void checkSpecificActiveUser() throws Exception {
+
+		Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+     
+		User activeUser = userService.checkSpecificActiveUser(user.getEmail());
+		assertThat(activeUser.getEmail().equals(user.getEmail())).isTrue();
+		
 	}
 
 }

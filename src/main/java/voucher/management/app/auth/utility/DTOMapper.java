@@ -1,5 +1,6 @@
 package voucher.management.app.auth.utility;
 
+
 import org.springframework.stereotype.Component;
 
 import voucher.management.app.auth.dto.UserDTO;
@@ -16,6 +17,10 @@ public class DTOMapper {
 		userDTO.setRole(user.getRole());
 		userDTO.setActive(user.isActive());
 		userDTO.setVerified(user.isVerified());
+		String[] preferences = user.getPreferences().split(",");
+		if (preferences.length > 0 && !preferences[0].isEmpty()) {
+		    userDTO.setCategories(preferences);
+		} 
 		return userDTO;
 	}
 

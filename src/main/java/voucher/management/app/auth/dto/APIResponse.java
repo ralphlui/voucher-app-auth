@@ -18,6 +18,10 @@ public class APIResponse<T> {
 	public static <T> APIResponse<T> success(String message) {
 		return APIResponse.<T>builder().success(true).message(message).data(null).totalRecord(1).build();
 	}
+	
+	public static <T> APIResponse<T> noList(T data, String message) {
+		return APIResponse.<T>builder().success(true).message(message).data(data).totalRecord(0).build();
+	}
 
 	public static <T> APIResponse<T> error(T data) {
 		return APIResponse.<T>builder().success(false).message("error").totalRecord(0).build();

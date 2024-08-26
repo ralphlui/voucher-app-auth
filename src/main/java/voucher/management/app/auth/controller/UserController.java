@@ -1,6 +1,5 @@
 package voucher.management.app.auth.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +25,7 @@ import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
+import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
 import voucher.management.app.auth.utility.DTOMapper;
@@ -43,43 +44,34 @@ public class UserController {
 
 	@Autowired
 	private UserValidationStrategy userValidationStrategy;
+	
 
 	@GetMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsers(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "500") int size) {
+	public ResponseEntity<APIResponse<List<UserDTO>>> getAllActiveUsers(
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API with page={}, size={}", page, size);
-		long totalRecord = 0;
 
 		try {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
 			Map<Long, List<UserDTO>> resultMap = userService.findActiveUsers(pageable);
+			logger.info("size" + resultMap.size());
 
-			if (resultMap.size() == 0) {
-				String message = "User not found.";
-				logger.error(message);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-			}
+			Map.Entry<Long, List<UserDTO>> firstEntry = resultMap.entrySet().iterator().next();
+			long totalRecord = firstEntry.getKey();
+			List<UserDTO> userDTOList = firstEntry.getValue();
 
-			List<UserDTO> userDTOList = new ArrayList<UserDTO>();
-
-			for (Map.Entry<Long, List<UserDTO>> entry : resultMap.entrySet()) {
-				totalRecord = entry.getKey();
-				userDTOList = entry.getValue();
-
-				logger.info("totalRecord: " + totalRecord);
-				logger.info("userDTO List: " + userDTOList);
-
-			}
+			logger.info("totalRecord: " + totalRecord);
+			logger.info("userDTO List: " + userDTOList);
 
 			if (userDTOList.size() > 0) {
-				return ResponseEntity.status(HttpStatus.OK)
-						.body(APIResponse.success(userDTOList, "Successfully get all active user.", totalRecord));
+				return ResponseEntity.status(HttpStatus.OK).body(
+						APIResponse.success(userDTOList, "Successfully get all active verified user.", totalRecord));
 
 			} else {
-				String message = "User not found.";
+				String message = "No Active User List.";
 				logger.error(message);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.noList(userDTOList, message));
 			}
 
 		} catch (Exception e) {
@@ -99,20 +91,13 @@ public class UserController {
 			if (validationResult.isValid()) {
 
 				User createdUser = userService.createUser(user);
-
-				if (createdUser != null && !createdUser.getEmail().isEmpty()) {
-					UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
-					message = user.getEmail() + " is created successfully";
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-				} else {
-					message = "User registraiton is not successful.";
-					logger.error(message);
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-				}
+				UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
+				message = user.getEmail() + " is created successfully";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
+				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
@@ -130,45 +115,38 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
 			if (!validationResult.isValid()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				logger.error("Login Valiation Error: " + validationResult.getMessage());
+				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
 			User user = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
-			if (user != null) {
-				UserDTO userDTO = DTOMapper.toUserDTO(user);
-				message = user.getEmail() + " login successfully";
-				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-			} else {
-				message = "Invalid credentials.";
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(APIResponse.error(message));
-			}
+			UserDTO userDTO = DTOMapper.toUserDTO(user);
+			message = user.getEmail() + " login successfully";
+			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+			
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error("Error: " + e.toString()));
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR;
+			return ResponseEntity.status(htpStatuscode)
+					.body(APIResponse.error("Error: " + e.getMessage()));
 		}
 	}
 
 	@PutMapping(value = "/verify/{verifyid}", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
+		logger.info("Call user verify API with verifyToken={}", verifyid);
 		verifyid = GeneralUtility.makeNotNull(verifyid);
 		logger.info("Call user verify API with verifyToken={}", verifyid);
 
 		String message = "";
 		try {
 			if (!verifyid.isEmpty()) {
-				UserDTO userDTO = userService.verifyUser(verifyid);
-				if (userDTO != null) {
-					message = "User successfully verified.";
+				User verifiedUser = userService.verifyUser(verifyid);
+				UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+				message = "User successfully verified.";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-
-				} else {
-
-					message = "Vefriy user failed: Verfiy Id is invalid or already verified.";
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-				}
 			} else {
 
 				message = "Vefriy Id could not be blank.";
@@ -176,9 +154,10 @@ public class UserController {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
-			message = "Error: " + e.toString();
+			message = "Error: " + e.getMessage();
 			logger.error(message);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
 		}
 
 	}
@@ -192,42 +171,23 @@ public class UserController {
 
 		String message = "";
 		try {
-
 			ValidationResult validationResult = userValidationStrategy.validateObject(resetPwdReq.getEmail());
 			if (!validationResult.isValid()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User dbUser = userService.findByEmailAndStatus(resetPwdReq.getEmail(), true, true);
-			if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
-
-				dbUser.setPassword(resetPwdReq.getPassword());
-				User modifiedUser = userService.update(dbUser);
-
-				if (!GeneralUtility.makeNotNull(modifiedUser).equals("")) {
-					message = "Reset Password Completed.";
-					logger.info(message + resetPwdReq.getEmail());
-					UserDTO userDTO = DTOMapper.toUserDTO(modifiedUser);
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-				} else {
-					message = "Reset Password failed: Unable to reset password for the user with email :"
-							+ resetPwdReq.getEmail();
-					logger.error(message);
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-
-				}
-			} else {
-				message = "Reset Password failed: Unable to find the user with email :" + resetPwdReq.getEmail();
-				logger.error(message);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-			}
+			User modifiedUser = userService.resetPassword(resetPwdReq);
+			message = "Reset Password is completed.";
+			logger.info(message + resetPwdReq.getEmail());
+			logger.info(modifiedUser.getEmail());
+			UserDTO userDTO = DTOMapper.toUserDTO(modifiedUser);
+			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
 			logger.error("Error, " + e.toString());
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error("Error, " + e.toString()));
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(e.getMessage()));
 		}
 
 	}
@@ -240,42 +200,25 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateUpdating(user);
 			if (validationResult.isValid()) {
-				User dbUser = userService.findByEmail(user.getEmail());
-				if (!GeneralUtility.makeNotNull(dbUser).equals("")) {
-					dbUser.setUsername(user.getUsername());
-					dbUser.setPassword(user.getPassword());
-					dbUser.setRole(user.getRole());
-					dbUser.setActive(user.isActive());
 
-					User updatedUser = userService.update(dbUser);
-					if (!GeneralUtility.makeNotNull(updatedUser).equals("")) {
-						UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
-						message = "User updated successfully.";
-						logger.info(message + user.getEmail());
-						return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-					} else {
-						message = "Update user failed: Changes could not be applied to the user with email: "
-								+ user.getEmail();
-						logger.error(message);
-						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+				User updatedUser = userService.update(user);
+				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				message = "User updated successfully.";
+				logger.info(message + user.getEmail());
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
-					}
-				} else {
-					message = "User not found.";
-					logger.error(message);
-					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-				}
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
 			message = "Error: " + e.toString();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error("Error, " + e.toString()));
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED
+					: HttpStatus.INTERNAL_SERVER_ERROR;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(e.getMessage()));
 		}
 	}
 
@@ -288,23 +231,20 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
 			if (!validationResult.isValid()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.findByEmail(userRequest.getEmail());
-			if (user != null) {
-				UserDTO userDTO = DTOMapper.toUserDTO(user);
-				message = user.getEmail() + " is Active";
-				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
-			} else {
-				message = "Invalid credentials.";
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(APIResponse.error(message));
-			}
+			User user = userService.checkSpecificActiveUser(userRequest.getEmail());
+			UserDTO userDTO = DTOMapper.toUserDTO(user);
+			message = user.getEmail() + " is Active";
+			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(APIResponse.error("Error: " + e.toString()));
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.BAD_REQUEST
+					: HttpStatus.INTERNAL_SERVER_ERROR;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error("Error: " + e.getMessage()));
 		}
 	}
 
@@ -313,38 +253,27 @@ public class UserController {
 			@PathVariable("preference") String preference, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API By Preferences with page={}, size={}", page, size);
-		long totalRecord = 0;
 
 		try {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
 			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(preference,pageable);
-
-			if (resultMap.size() == 0) {
-				String message = "User not found.";
-				logger.error(message);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-			}
-
-			List<UserDTO> userDTOList = new ArrayList<UserDTO>();
-
-			for (Map.Entry<Long, List<UserDTO>> entry : resultMap.entrySet()) {
-				totalRecord = entry.getKey();
-				userDTOList = entry.getValue();
-
-				logger.info("totalRecord: " + totalRecord);
-				logger.info("userDTO List: " + userDTOList);
-
-			}
+			
+			Map.Entry<Long, List<UserDTO>> firstEntry = resultMap.entrySet().iterator().next();
+			long totalRecord = firstEntry.getKey();
+			List<UserDTO> userDTOList = firstEntry.getValue();
+			
+			logger.info("totalRecord: " + totalRecord);
+			logger.info("userDTO List: " + userDTOList);
 
 			if (userDTOList.size() > 0) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(APIResponse.success(userDTOList, "Successfully get all active user by preferences.", totalRecord));
 
 			} else {
-				String message = "User not found.";
+				String message = "No user list by this preferences.";
 				logger.error(message);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.noList(userDTOList, message));
 			}
 
 		} catch (Exception e) {
