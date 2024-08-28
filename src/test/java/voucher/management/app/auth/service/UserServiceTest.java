@@ -194,5 +194,19 @@ public class UserServiceTest {
 		assertThat(activeUser.getEmail().equals(user.getEmail())).isTrue();
 		
 	}
+	
+	@Test
+	void deletePreferencesByUser() throws Exception {
+
+		ArrayList<String> al = new ArrayList<String>();
+		al.add("food");
+		user.setCategories(al);
+		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
+		Mockito.when(userRepository.save(user)).thenReturn(user);
+     
+	    User updateUser = userService.deletePreferencesByUser(user);
+		assertThat(updateUser.getEmail().equals("admin12345@gmail.com")).isTrue();
+		
+	}
 
 }

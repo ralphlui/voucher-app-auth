@@ -188,14 +188,16 @@ public class UserControllerTest {
 	public void testResetPassword() throws Exception {
 		testUser.setVerified(true);
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.update(testUser)).thenReturn(testUser);
+		
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
+		Mockito.when(userService.resetPassword(Mockito.any(UserRequest.class)))
+		   .thenReturn(testUser);
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
-				.andExpect(MockMvcResultMatchers.status().isInternalServerError())
+				.andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.success").value(false)).andDo(print());
+				.andExpect(jsonPath("$.success").value(true)).andDo(print());
 	}
 	
 
@@ -263,5 +265,25 @@ public class UserControllerTest {
 				.param("size", "10").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false)).andDo(print());
 
+	}
+	
+	@Test
+	void testDeletePreferencesByUser() throws Exception {
+		
+		testUser.setVerified(true);
+		testUser.setUsername("khin");
+		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
+		Mockito.when(userService.deletePreferencesByUser(Mockito.any(User.class)))
+		   .thenReturn(testUser);
+		
+
+		
+		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/preferences")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(testUser)))
+		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
 	}
 }
