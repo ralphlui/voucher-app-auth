@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -281,6 +282,34 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(APIResponse.error("Error: " + e.getMessage()));
 		}
+	}
+	
+	@DeleteMapping(value = "/preferences", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@RequestBody User user) {
+		logger.info("Call user Delete Preferences API...");
+		String message;
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateObject(user.getEmail());
+			if (validationResult.isValid()) {
+
+				User updatedUser = userService.deletePreferencesByUser(user);
+				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				message = "Preferences deleted successfully.";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+			} else {
+				message = validationResult.getMessage();
+				logger.error(message);
+				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			message = e.getMessage();
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
+					: HttpStatus.BAD_REQUEST;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
+		}
+
 	}
 
 }

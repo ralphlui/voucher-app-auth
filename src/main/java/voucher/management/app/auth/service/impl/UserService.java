@@ -293,5 +293,43 @@ public class UserService implements IUserService  {
 		}
 	}
 
+	@Override
+	public User deletePreferencesByUser(User user) throws Exception {
+		try {
+			User dbUser = findByEmail(user.getEmail());
+			if (dbUser == null) {
+				throw new UserNotFoundException("User not found.");
+			}
+			
+			 String existingPreferencesStr = dbUser.getPreferences();
+			    if (existingPreferencesStr == null || existingPreferencesStr.isEmpty()) {
+			        throw new Exception("No existing user preferences to delete.");
+			    }
+			    
+			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
+			    List<String> deletedPreferences = user.getCategories();
+			    deletedPreferences.replaceAll(String::trim);
+			    
+			    List<String> updatedPreferences = new ArrayList<>(existingPreferencesList);
+			    updatedPreferences.removeAll(deletedPreferences);
+			    
+			    if (updatedPreferences.size() == existingPreferencesList.size()) {
+			        throw new Exception("The requested preferences do not exist and cannot be deleted.");
+			    }
+
+			    dbUser.setPreferences(String.join(",", updatedPreferences));
+			    dbUser.setUpdatedDate(LocalDateTime.now());
+
+				User updateUser = userRepository.save(dbUser);
+				return updateUser;
+			
+		} catch (Exception e) {
+			logger.error("Error occurred while user deleting preferences, " + e.toString());
+			e.printStackTrace();
+			throw e;
+
+		}
+	}
+
 }
 

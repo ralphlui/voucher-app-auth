@@ -29,4 +29,6 @@ public interface IUserService {
 	 User resetPassword(UserRequest userRequest);
 	 
 	 User checkSpecificActiveUser(String email);
+	 
+	 User deletePreferencesByUser(User user) throws Exception ;
 }
