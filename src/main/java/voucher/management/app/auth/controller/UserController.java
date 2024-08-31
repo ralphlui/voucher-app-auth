@@ -25,11 +25,9 @@ import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.dto.ValidationResult;
-import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
-import voucher.management.app.auth.utility.DTOMapper;
 import voucher.management.app.auth.utility.GeneralUtility;
 
 import org.springframework.data.domain.Sort;
