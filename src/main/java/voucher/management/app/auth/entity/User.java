@@ -73,7 +73,5 @@ public class User {
 	@Column(nullable = true, columnDefinition = "varchar(255)")
 	private String preferences;
 	
-	@Transient
-	private ArrayList<String> categories;
 }
 
