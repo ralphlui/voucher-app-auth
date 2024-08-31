@@ -30,5 +30,5 @@ public interface IUserService {
 	 
 	 User checkSpecificActiveUser(String email);
 	 
-	 User deletePreferencesByUser(User user) throws Exception ;
+	 UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception ;
 }

@@ -283,16 +283,15 @@ public class UserController {
 	}
 	
 	@DeleteMapping(value = "/preferences", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user Delete Preferences API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(user.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
 			if (validationResult.isValid()) {
 
-				User updatedUser = userService.deletePreferencesByUser(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				UserDTO userDTO = userService.deletePreferencesByUser(userRequest);
 				message = "Preferences deleted successfully.";
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {

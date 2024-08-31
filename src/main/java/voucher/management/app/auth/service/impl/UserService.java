@@ -301,9 +301,9 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User deletePreferencesByUser(User user) throws Exception {
+	public UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception {
 		try {
-			User dbUser = findByEmail(user.getEmail());
+			User dbUser = findByEmail(userRequest.getEmail());
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
@@ -314,7 +314,7 @@ public class UserService implements IUserService  {
 			    }
 			    
 			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
-			    List<String> deletedPreferences = user.getCategories();
+			    List<String> deletedPreferences = userRequest.getPreferences();
 			    deletedPreferences.replaceAll(String::trim);
 			    
 			    List<String> updatedPreferences = new ArrayList<>(existingPreferencesList);
@@ -328,7 +328,8 @@ public class UserService implements IUserService  {
 			    dbUser.setUpdatedDate(LocalDateTime.now());
 
 				User updateUser = userRepository.save(dbUser);
-				return updateUser;
+				UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+				return updateUserDTO;
 			
 		} catch (Exception e) {
 			logger.error("Error occurred while user deleting preferences, " + e.toString());

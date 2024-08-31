@@ -129,7 +129,6 @@ public class UserServiceTest {
 
 		user.setActive(userRequest.getActive());
 		user.setUsername(userRequest.getUsername());
-		//user.setCategories(new ArrayList<>());
 		user.setUpdatedDate(LocalDateTime.now());
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(user);
 
@@ -198,18 +197,19 @@ public class UserServiceTest {
 		
 	}
 	
-//	@Test
-//	void deletePreferencesByUser() throws Exception {
-//
-//		ArrayList<String> al = new ArrayList<String>();
-//		al.add("food");
-//		user.setCategories(al);
-//		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
-//		Mockito.when(userRepository.save(user)).thenReturn(user);
-//     
-//	    User updateUser = userService.deletePreferencesByUser(user);
-//		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
-//		
-//	}
+	@Test
+	void deletePreferencesByUser() throws Exception {
+
+		ArrayList<String> deletedPreferenceList = new ArrayList<String>();
+		deletedPreferenceList.add("food");
+		userRequest.setPreferences(deletedPreferenceList);
+		user.setEmail(userRequest.getEmail());
+		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
+		Mockito.when(userRepository.save(user)).thenReturn(user);
+     
+	    UserDTO updateUser = userService.deletePreferencesByUser(userRequest);
+		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
+		
+	}
 
 }

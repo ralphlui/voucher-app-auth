@@ -280,14 +280,14 @@ public class UserControllerTest {
 		testUser.setVerified(true);
 		testUser.setUsername("khin");
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.deletePreferencesByUser(Mockito.any(User.class)))
-		   .thenReturn(testUser);
+		Mockito.when(userService.deletePreferencesByUser(Mockito.any(UserRequest.class)))
+		   .thenReturn(DTOMapper.toUserDTO(testUser));
 		
 
 		
 		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/preferences")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
