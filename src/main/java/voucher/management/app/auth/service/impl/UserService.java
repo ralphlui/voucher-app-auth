@@ -119,11 +119,11 @@ public class UserService implements IUserService  {
 
 
 	@Override
-	public User loginUser(String email, String password) {
+	public UserDTO loginUser(String email, String password) {
 		try {
 			User user = userRepository.findByEmailAndStatus(email, true, true);
 			if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-				return user;
+				return DTOMapper.toUserDTO(user);
 			}
 			throw new UserNotFoundException("Invalid Credentials");
 		} catch (Exception e) {

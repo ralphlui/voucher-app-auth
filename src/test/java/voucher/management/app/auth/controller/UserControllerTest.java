@@ -114,7 +114,7 @@ public class UserControllerTest {
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
-		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(testUser);
+		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())

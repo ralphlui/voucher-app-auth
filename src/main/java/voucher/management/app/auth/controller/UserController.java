@@ -120,9 +120,8 @@ public class UserController {
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
-			UserDTO userDTO = DTOMapper.toUserDTO(user);
-			message = user.getEmail() + " login successfully";
+			UserDTO userDTO = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
+			message = userDTO.getEmail() + " login successfully";
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			
 		} catch (Exception e) {

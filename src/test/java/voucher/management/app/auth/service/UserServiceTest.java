@@ -102,9 +102,9 @@ public class UserServiceTest {
         Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
         Mockito.when(passwordEncoder.matches(user.getPassword(), user.getPassword())).thenReturn(true);
 
-        User result = userService.loginUser(user.getEmail(), user.getPassword());
+        UserDTO result = userService.loginUser(user.getEmail(), user.getPassword());
 
-        assertEquals(user, result);
+        assertEquals(user.getEmail(), result.getEmail());
     }
 	
 
