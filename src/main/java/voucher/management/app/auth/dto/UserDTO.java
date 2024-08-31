@@ -8,6 +8,7 @@ import voucher.management.app.auth.enums.RoleType;
 @Setter
 public class UserDTO {
 
+	private String userID;
 	private String email;
 	private String username;
 	private RoleType role;

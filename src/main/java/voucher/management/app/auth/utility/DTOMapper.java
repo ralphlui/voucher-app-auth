@@ -12,6 +12,7 @@ public class DTOMapper {
 
 	public static UserDTO toUserDTO(User user) {
 		UserDTO userDTO = new UserDTO();
+		userDTO.setUserID(user.getUserId());
 		userDTO.setUsername(user.getUsername());
 		userDTO.setEmail(user.getEmail());
 		userDTO.setRole(user.getRole());
