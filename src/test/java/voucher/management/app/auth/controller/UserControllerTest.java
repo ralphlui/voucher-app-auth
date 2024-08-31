@@ -197,7 +197,7 @@ public class UserControllerTest {
 		
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.resetPassword(Mockito.any(UserRequest.class)))
-		   .thenReturn(testUser);
+		   .thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
@@ -236,7 +236,7 @@ public class UserControllerTest {
 	public void testActiveUser() throws Exception {
 		testUser.setVerified(true);
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.checkSpecificActiveUser(testUser.getEmail())).thenReturn(testUser);
+		Mockito.when(userService.checkSpecificActiveUser(testUser.getEmail())).thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))

@@ -26,9 +26,9 @@ public interface IUserService {
 	 
 	 Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable);
 	 
-	 User resetPassword(UserRequest userRequest);
+	 UserDTO resetPassword(UserRequest userRequest);
 	 
-	 User checkSpecificActiveUser(String email);
+	 UserDTO checkSpecificActiveUser(String email);
 	 
 	 UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception ;
 }

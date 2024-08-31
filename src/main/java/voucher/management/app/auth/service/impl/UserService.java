@@ -264,7 +264,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User resetPassword(UserRequest userRequest) {
+	public UserDTO resetPassword(UserRequest userRequest) {
 		try {
 			User dbUser = findByEmailAndStatus(userRequest.getEmail(), true, true);
 			if (dbUser == null) {
@@ -275,7 +275,8 @@ public class UserService implements IUserService  {
 
 			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 			User updatedUser = userRepository.save(dbUser);
-			return updatedUser;
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updatedUser);
+			return updateUserDTO;
 
 		} catch (Exception e) {
 			logger.error("Error occurred while validateUserLogin, " + e.toString());
@@ -285,14 +286,14 @@ public class UserService implements IUserService  {
 	}
 	
 	@Override
-	public User checkSpecificActiveUser(String email) {
+	public UserDTO checkSpecificActiveUser(String email) {
 		try {
 			User user = findByEmailAndStatus(email, true, true);
 			if (user == null) {
 				throw new UserNotFoundException(email +
 						" is not an active user");
 			}
-			return user;
+			return DTOMapper.toUserDTO(user);
 			
 		} catch (Exception e) {
 			logger.error("Error occurred while checking specific active User, " + e.toString());

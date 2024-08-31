@@ -60,6 +60,7 @@ public class UserServiceTest {
 	@BeforeEach
 	void setUp() {
 		user.setPreferences("food");
+		user.setEmail(userRequest.getEmail());
 		mockUsers.add(user);
 
 	}
@@ -182,8 +183,8 @@ public class UserServiceTest {
      
 
     	UserRequest userRequest = new UserRequest(user.getEmail(), "Pwd@21212");
-		User updatedUser = userService.resetPassword(userRequest);
-		assertThat(updatedUser.getEmail().equals("admin12345@gmail.com")).isTrue();
+		UserDTO updatedUser = userService.resetPassword(userRequest);
+		assertThat(updatedUser.getEmail().equals("useradmin@gmail.com")).isTrue();
 
 	}
 	
@@ -192,7 +193,7 @@ public class UserServiceTest {
 
 		Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
      
-		User activeUser = userService.checkSpecificActiveUser(user.getEmail());
+		UserDTO activeUser = userService.checkSpecificActiveUser(user.getEmail());
 		assertThat(activeUser.getEmail().equals(user.getEmail())).isTrue();
 		
 	}
@@ -203,7 +204,6 @@ public class UserServiceTest {
 		ArrayList<String> deletedPreferenceList = new ArrayList<String>();
 		deletedPreferenceList.add("food");
 		userRequest.setPreferences(deletedPreferenceList);
-		user.setEmail(userRequest.getEmail());
 		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
 		Mockito.when(userRepository.save(user)).thenReturn(user);
      

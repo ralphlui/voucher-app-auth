@@ -175,11 +175,10 @@ public class UserController {
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User modifiedUser = userService.resetPassword(resetPwdReq);
+			UserDTO userDTO = userService.resetPassword(resetPwdReq);
 			message = "Reset Password is completed.";
 			logger.info(message + resetPwdReq.getEmail());
-			logger.info(modifiedUser.getEmail());
-			UserDTO userDTO = DTOMapper.toUserDTO(modifiedUser);
+			logger.info(userDTO.getEmail());
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
@@ -232,9 +231,8 @@ public class UserController {
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.checkSpecificActiveUser(userRequest.getEmail());
-			UserDTO userDTO = DTOMapper.toUserDTO(user);
-			message = user.getEmail() + " is Active";
+			UserDTO userDTO = userService.checkSpecificActiveUser(userRequest.getEmail());
+			message = userDTO.getEmail() + " is Active";
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
