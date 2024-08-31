@@ -18,7 +18,7 @@ public interface IUserService {
 	 
 	 UserDTO loginUser(String email, String password);
 	 
-	 User verifyUser(String verificationCode) throws Exception;
+	 UserDTO verifyUser(String verificationCode) throws Exception;
 	 
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 	 

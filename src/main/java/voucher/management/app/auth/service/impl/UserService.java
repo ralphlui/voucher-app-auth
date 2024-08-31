@@ -134,7 +134,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User verifyUser(String verificationCode) throws Exception {
+	public UserDTO verifyUser(String verificationCode) throws Exception {
 		String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);
 		User user = userRepository.findByVerificationCode(decodedVerificationCode, false, true);
 		if (user == null) {
@@ -143,10 +143,11 @@ public class UserService implements IUserService  {
 		user.setVerified(true);
 		user.setUpdatedDate(LocalDateTime.now());
 		User verifiedUser = userRepository.save(user);
-		if (verifiedUser == null) {
+		UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+		if (userDTO == null) {
 			throw new UserNotFoundException("Vefriy user failed: Verfiy Id is invalid or already verified.");
 		}
-		return verifiedUser;
+		return userDTO;
 	}
 
 	@Override

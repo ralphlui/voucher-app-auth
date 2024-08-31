@@ -118,7 +118,7 @@ public class UserServiceTest {
 		Mockito.when(userRepository.findByVerificationCode(decodedVerificationCode, false, true)).thenReturn(user);
 		Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
-		User verifiedUser = userService.verifyUser(verificationCode);
+		UserDTO verifiedUser = userService.verifyUser(verificationCode);
 
 		assertThat(user.isVerified()).isTrue();
 		assertThat(verifiedUser).isNotNull();

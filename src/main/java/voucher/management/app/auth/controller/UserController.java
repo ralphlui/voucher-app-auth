@@ -141,10 +141,9 @@ public class UserController {
 		String message = "";
 		try {
 			if (!verifyid.isEmpty()) {
-				User verifiedUser = userService.verifyUser(verifyid);
-				UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+				UserDTO verifiedUserDTO = userService.verifyUser(verifyid);
 				message = "User successfully verified.";
-				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(verifiedUserDTO, message));
 
 			} else {
 
