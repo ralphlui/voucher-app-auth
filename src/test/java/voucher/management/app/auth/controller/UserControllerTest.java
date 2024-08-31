@@ -65,14 +65,21 @@ public class UserControllerTest {
 
 	
 	User testUser;
+	UserRequest userRequest = new UserRequest();
 
 	private static List<UserDTO> mockUsers = new ArrayList<>();
 	User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 
+
+
 	@BeforeEach
 	void setUp() {
+		ArrayList<String> al = new ArrayList<String>();
+		al.add("clothing");
 		testUser = new User("antonia@gmail.com", "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
 		testUser.setPreferences("food");
+		userRequest.setEmail("useradmin@gmail.com");
+		testUser.setEmail(userRequest.getEmail());
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
 	}
@@ -161,13 +168,13 @@ public class UserControllerTest {
 
 	@Test
 	public void testCreateUser() throws Exception {
-		Mockito.when(userService.createUser(Mockito.any(User.class)))
-	   .thenReturn(testUser);
+		Mockito.when(userService.createUser(Mockito.any(UserRequest.class)))
+	   .thenReturn(DTOMapper.toUserDTO(testUser));
 		
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
@@ -183,7 +190,7 @@ public class UserControllerTest {
 		        .andDo(print());
 		
     }
-	
+
 	@Test
 	public void testResetPassword() throws Exception {
 		testUser.setVerified(true);
@@ -204,13 +211,13 @@ public class UserControllerTest {
 	@Test
 	public void testUpdatedUser() throws Exception {
 		testUser.setVerified(true);
-		Mockito.when(userService.update(Mockito.any(User.class)))
-		   .thenReturn(testUser);
+		Mockito.when(userService.update(Mockito.any(UserRequest.class)))
+		   .thenReturn(DTOMapper.toUserDTO(testUser));
 
 		
 	   mockMvc.perform(MockMvcRequestBuilders.put("/api/users")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
@@ -233,7 +240,7 @@ public class UserControllerTest {
 		Mockito.when(userService.checkSpecificActiveUser(testUser.getEmail())).thenReturn(testUser);
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))

@@ -14,7 +14,7 @@ public class UserDTO {
 	private RoleType role;
 	private boolean isActive;
 	private boolean isVerified;
-	private String[] categories;
+	private String[] preferences;
     public UserDTO(){
     }
     

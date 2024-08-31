@@ -74,31 +74,38 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User createUser(User user) {
+	public UserDTO createUser(UserRequest userReq) throws Exception {
 		try {
-			String encodedPassword = passwordEncoder.encode(user.getPassword());
+			User user = new User();
+			user.setEmail(userReq.getEmail());
+			user.setUsername(userReq.getUsername());
+			String encodedPassword = passwordEncoder.encode(userReq.getPassword());
 			user.setPassword(encodedPassword);
 			String code = UUID.randomUUID().toString();
 			user.setVerificationCode(code);
 			user.setVerified(false);
 			user.setActive(true);
+			user.setRole(userReq.getRole());
 			user.setCreatedDate(LocalDateTime.now());
-			String preferences = addNewPreferences(user);
+			String preferences = addNewPreferences(userReq);
 			user.setPreferences(preferences);
 			User createdUser = userRepository.save(user);
 
-			if (createdUser != null) {
-				String verificationCode = encryptionUtils.encrypt(createdUser.getVerificationCode());
-				logger.info("verification code"+ verificationCode);
-				sendVerificationEmail(createdUser);
+			if (createdUser == null) {
+				throw new Exception("User registration is not successful");
 			}
 
-			return createdUser;
+			String verificationCode = encryptionUtils.encrypt(createdUser.getVerificationCode());
+			logger.info("verification code" + verificationCode);
+			sendVerificationEmail(createdUser);
+
+			UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
+			return userDTO;
 
 		} catch (Exception e) {
 			logger.error("Error occurred while user creating, " + e.toString());
 			e.printStackTrace();
-			return null;
+			throw e;
 
 		}
 	}
@@ -149,27 +156,27 @@ public class UserService implements IUserService  {
 	}
 	
 	@Override
-	public User update(User user) {
+	public UserDTO update(UserRequest userRequest) {
 		try {
-			User dbUser = findByEmail(user.getEmail());
+			User dbUser = findByEmail(userRequest.getEmail());
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
-			dbUser.setUsername(user.getUsername());
-			dbUser.setPassword(passwordEncoder.encode(user.getPassword()));
-			dbUser.setRole(user.getRole());
-			dbUser.setActive(user.isActive());
+			dbUser.setUsername(userRequest.getUsername());
+			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			dbUser.setActive(userRequest.getActive());
 			dbUser.setUpdatedDate(LocalDateTime.now());
 			if (!dbUser.getPreferences().isEmpty()) {
 				logger.info("Existing preferences");
-				addExistingPreferences(user,dbUser);
+				addExistingPreferences(userRequest,dbUser);
 			} else {
 				logger.info("New preferences");
-				String preferences = addNewPreferences(user);
+				String preferences = addNewPreferences(userRequest);
 				dbUser.setPreferences(preferences);
 			}
 			User updateUser = userRepository.save(dbUser);
-			return updateUser;
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+			return updateUserDTO;
 		} catch (Exception e) {
 			logger.error("Error occurred while user updating, " + e.toString());
 			e.printStackTrace();
@@ -178,18 +185,18 @@ public class UserService implements IUserService  {
 
 	}
 	
-	private String addNewPreferences(User user) {
-		String preferences =  user.getCategories() == null ? "" : String.join(",", user.getCategories());
-		String cleanedStrPreferences = preferences.replaceAll("\\s*,\\s*", ",");
-		return cleanedStrPreferences.trim();
+	private String addNewPreferences(UserRequest userReq) {
+		String preferences =  userReq.getPreferences() == null ? "" : String.join(",", userReq.getPreferences());
+		String removedWhiteSpacePreferences = preferences.replaceAll("\\s*,\\s*", ",");
+		return removedWhiteSpacePreferences.trim();
 	}
 	
-	private void addExistingPreferences(User user, User dbUser) {
+	private void addExistingPreferences(UserRequest userRequest, User dbUser) {
 		String[] preferencesArray = dbUser.getPreferences().split(",");
 		 Set<String> uniqueValuesSet = new HashSet<>(Arrays.asList(preferencesArray));
-		for (String category : user.getCategories()) {
-			if (!uniqueValuesSet.contains(category.trim())) {
-				uniqueValuesSet.add(category.trim());
+		for (String preference : userRequest.getPreferences()) {
+			if (!uniqueValuesSet.contains(preference.trim())) {
+				uniqueValuesSet.add(preference.trim());
 			}
 		}
 		String preferences = String.join(",", uniqueValuesSet);

@@ -12,7 +12,7 @@ import voucher.management.app.auth.entity.User;
 public interface IUserService {
 	Map<Long, List<UserDTO>> findActiveUsers(Pageable pageable);
 	
-	 User createUser(User user);
+	 UserDTO createUser(UserRequest userReq) throws Exception;
 	 
 	 User findByEmail(String email);
 	 
@@ -22,7 +22,7 @@ public interface IUserService {
 	 
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 	 
-	 User update(User user);
+	 UserDTO update(UserRequest userRequest);
 	 
 	 Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable);
 	 

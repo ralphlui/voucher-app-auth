@@ -20,7 +20,7 @@ public class DTOMapper {
 		userDTO.setVerified(user.isVerified());
 		String[] preferences = user.getPreferences().split(",");
 		if (preferences.length > 0 && !preferences[0].isEmpty()) {
-		    userDTO.setCategories(preferences);
+		    userDTO.setPreferences(preferences);
 		} 
 		return userDTO;
 	}

@@ -83,17 +83,16 @@ public class UserController {
 	}
 
 	@PostMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user create API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
+			ValidationResult validationResult = userValidationStrategy.validateCreation(userRequest);
 			if (validationResult.isValid()) {
 
-				User createdUser = userService.createUser(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
-				message = user.getEmail() + " is created successfully";
+				UserDTO userDTO = userService.createUser(userRequest);
+				message = userRequest.getEmail() + " is created successfully";
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
@@ -102,7 +101,7 @@ public class UserController {
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
-			message = "Error: " + e.toString();
+			message = "Error: " + e.getMessage();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
 		}
 
@@ -194,18 +193,17 @@ public class UserController {
 	}
 
 	@PutMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> updateUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserDTO>> updateUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user update API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateUpdating(user);
+			ValidationResult validationResult = userValidationStrategy.validateUpdating(userRequest);
 			if (validationResult.isValid()) {
 
-				User updatedUser = userService.update(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				UserDTO userDTO = userService.update(userRequest);
 				message = "User updated successfully.";
-				logger.info(message + user.getEmail());
+				logger.info(message + userRequest.getEmail());
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 			} else {
