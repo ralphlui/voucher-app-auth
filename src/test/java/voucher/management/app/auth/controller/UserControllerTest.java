@@ -65,20 +65,18 @@ public class UserControllerTest {
 
 	
 	User testUser;
+	User errorUser;
 	UserRequest userRequest = new UserRequest();
 
 	private static List<UserDTO> mockUsers = new ArrayList<>();
-	User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
-
 
 
 	@BeforeEach
 	void setUp() {
-		ArrayList<String> al = new ArrayList<String>();
-		al.add("clothing");
-		testUser = new User("antonia@gmail.com", "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
-		testUser.setPreferences("food");
 		userRequest.setEmail("useradmin@gmail.com");
+		testUser = new User(userRequest.getEmail(), "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
+		errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
+		testUser.setPreferences("food");
 		testUser.setEmail(userRequest.getEmail());
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
@@ -88,6 +86,7 @@ public class UserControllerTest {
 	public void tearDown() {
 		testUser = new User();
 		errorUser = new User();
+		userRequest = new UserRequest();
 
 	}
 
@@ -277,7 +276,6 @@ public class UserControllerTest {
 	void testDeletePreferencesByUser() throws Exception {
 		
 		testUser.setVerified(true);
-		testUser.setUsername("khin");
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
 		Mockito.when(userService.deletePreferencesByUser(Mockito.any(UserRequest.class)))
 		   .thenReturn(DTOMapper.toUserDTO(testUser));

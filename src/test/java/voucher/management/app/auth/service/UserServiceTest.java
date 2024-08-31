@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -53,17 +54,25 @@ public class UserServiceTest {
 	private EncryptionUtils encryptionUtils;
 
 	
-	private static User user = new User("admin12345@gmail.com", "Admin", "Pwd@123", RoleType.ADMIN, true);
+	private static User user;
 
-	private static UserRequest userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
-
+	private static UserRequest userRequest;
 	@BeforeEach
 	void setUp() {
+		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
+		user = new User(userRequest.getEmail(), userRequest.getUsername(), "Pwd@123", RoleType.ADMIN, true);
 		user.setPreferences("food");
-		user.setEmail(userRequest.getEmail());
 		mockUsers.add(user);
 
 	}
+
+	@AfterEach
+	public void tearDown() {
+		user = new User();
+		userRequest = new UserRequest();
+
+	}
+
 
 	@Test
 	void getAllActiveUsers() {
