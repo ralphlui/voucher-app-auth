@@ -62,6 +62,7 @@ public class UserServiceTest {
 		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
 		user = new User(userRequest.getEmail(), userRequest.getUsername(), "Pwd@123", RoleType.ADMIN, true);
 		user.setPreferences("food");
+		user.setUserId("8e67a5b7-f30c-4051-bfe4-64533aafe204");
 		mockUsers.add(user);
 
 	}
@@ -200,9 +201,9 @@ public class UserServiceTest {
 	@Test
 	void checkSpecificActiveUser() throws Exception {
 
-		Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+		Mockito.when(userRepository.findByUserIdAndStatus(user.getUserId(), true, true)).thenReturn(user);
      
-		UserDTO activeUser = userService.checkSpecificActiveUser(user.getEmail());
+		UserDTO activeUser = userService.checkSpecificActiveUser(user.getUserId());
 		assertThat(activeUser.getEmail().equals(user.getEmail())).isTrue();
 		
 	}

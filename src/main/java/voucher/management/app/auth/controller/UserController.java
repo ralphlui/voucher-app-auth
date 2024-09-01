@@ -216,20 +216,20 @@ public class UserController {
 		}
 	}
 
-	@GetMapping(value = "/active", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@RequestBody UserRequest userRequest) {
+	@GetMapping(value = "/{id}/active", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@PathVariable("id") String id) {
 		logger.info("Call user active API...");
-		logger.info("email" + userRequest.getEmail());
+		logger.info("User ID" + id);
 		String message = "";
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			UserDTO userDTO = userService.checkSpecificActiveUser(userRequest.getEmail());
+			UserDTO userDTO = userService.checkSpecificActiveUser(id);
 			message = userDTO.getEmail() + " is Active";
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 

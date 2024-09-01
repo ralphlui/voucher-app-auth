@@ -28,7 +28,9 @@ public interface IUserService {
 	 
 	 UserDTO resetPassword(UserRequest userRequest);
 	 
-	 UserDTO checkSpecificActiveUser(String email);
+	 UserDTO checkSpecificActiveUser(String userId);
 	 
 	 UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception ;
+	 
+	 User findByUserId(String userId);
 }

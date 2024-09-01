@@ -116,6 +116,13 @@ public class UserService implements IUserService  {
 
 		return userRepository.findByEmail(email);
 	}
+	
+	
+	@Override
+	public User findByUserId(String userId) {
+
+		return userRepository.findByUserId(userId);
+	}
 
 
 	@Override
@@ -154,6 +161,11 @@ public class UserService implements IUserService  {
 	public User findByEmailAndStatus(String email, boolean isActive, boolean isVerified) {
 
 		return userRepository.findByEmailAndStatus(email, isActive, isVerified);
+	}
+	
+	public User findByUserIdAndStatus(String userId, boolean isActive, boolean isVerified) {
+
+		return userRepository.findByUserIdAndStatus(userId, isActive, isVerified);
 	}
 	
 	@Override
@@ -286,12 +298,11 @@ public class UserService implements IUserService  {
 	}
 	
 	@Override
-	public UserDTO checkSpecificActiveUser(String email) {
+	public UserDTO checkSpecificActiveUser(String userId) {
 		try {
-			User user = findByEmailAndStatus(email, true, true);
+			User user = findByUserIdAndStatus(userId, true, true);
 			if (user == null) {
-				throw new UserNotFoundException(email +
-						" is not an active user");
+				throw new UserNotFoundException("This user is not an active user");
 			}
 			return DTOMapper.toUserDTO(user);
 			

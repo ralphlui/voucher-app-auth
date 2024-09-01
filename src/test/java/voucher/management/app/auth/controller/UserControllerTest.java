@@ -78,6 +78,7 @@ public class UserControllerTest {
 		errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 		testUser.setPreferences("food");
 		testUser.setEmail(userRequest.getEmail());
+		testUser.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
 	}
@@ -234,10 +235,10 @@ public class UserControllerTest {
 	@Test
 	public void testActiveUser() throws Exception {
 		testUser.setVerified(true);
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.checkSpecificActiveUser(testUser.getEmail())).thenReturn(DTOMapper.toUserDTO(testUser));
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.checkSpecificActiveUser(testUser.getUserId())).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
