@@ -277,7 +277,7 @@ public class UserControllerTest {
 		
 
 		
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", userRequest.getUserId())
+		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/{id}/preferences", userRequest.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
