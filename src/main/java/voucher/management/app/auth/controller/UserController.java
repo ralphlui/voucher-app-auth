@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -243,16 +242,16 @@ public class UserController {
 		}
 	}
 
-	@GetMapping(value = "/preferences/{preference}", produces = "application/json")
+	@GetMapping(value = "/preferences/{name}", produces = "application/json")
 	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsersByPreferences(
-			@PathVariable("preference") String preference, @RequestParam(defaultValue = "0") int page,
+			@PathVariable("name") String name, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API By Preferences with page={}, size={}", page, size);
 
 		try {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
-			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(preference,pageable);
+			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(name, pageable);
 			
 			Map.Entry<Long, List<UserDTO>> firstEntry = resultMap.entrySet().iterator().next();
 			long totalRecord = firstEntry.getKey();
@@ -278,16 +277,16 @@ public class UserController {
 		}
 	}
 	
-	@DeleteMapping(value = "/preferences", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@RequestBody UserRequest userRequest) {
+	@PatchMapping(value = "/{id}/preferences", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user Delete Preferences API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (validationResult.isValid()) {
 
-				UserDTO userDTO = userService.deletePreferencesByUser(userRequest);
+				UserDTO userDTO = userService.deletePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences deleted successfully.";
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {

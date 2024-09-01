@@ -75,10 +75,9 @@ public class UserControllerTest {
 	void setUp() {
 		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@21212", "UserAdmin", RoleType.MERCHANT, true, new ArrayList<String>());
 		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
-		testUser = new User(userRequest.getEmail(), "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
+		testUser = new User(userRequest.getEmail(), userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole(), true);
 		errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 		testUser.setPreferences("food");
-		testUser.setEmail(userRequest.getEmail());
 		testUser.setUserId(userRequest.getUserId());
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
@@ -111,7 +110,6 @@ public class UserControllerTest {
 	@Test
 	public void testUserLogin() throws Exception {
 		testUser.setVerified(true);
-		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
 		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(DTOMapper.toUserDTO(testUser));
@@ -269,13 +267,17 @@ public class UserControllerTest {
 	void testDeletePreferencesByUser() throws Exception {
 		
 		testUser.setVerified(true);
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.deletePreferencesByUser(Mockito.any(UserRequest.class)))
+		ArrayList<String> deletedPreferenceList = new ArrayList<String>();
+		deletedPreferenceList.add("food");
+		userRequest.setPreferences(deletedPreferenceList);
+		
+		Mockito.when(userService.findByUserId(userRequest.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.deletePreferencesByUser(userRequest.getUserId(),userRequest.getPreferences()))
 		   .thenReturn(DTOMapper.toUserDTO(testUser));
 		
 
 		
-		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/preferences")
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", userRequest.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))

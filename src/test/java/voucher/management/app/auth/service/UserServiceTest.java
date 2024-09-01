@@ -60,10 +60,10 @@ public class UserServiceTest {
 	@BeforeEach
 	void setUp() {
 		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
-		user = new User(userRequest.getEmail(), userRequest.getUsername(), "Pwd@123", RoleType.ADMIN, true);
-		user.setPreferences("food");
-		user.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
+		user = new User(userRequest.getEmail(), userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole(), true);
 		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
+		user.setPreferences("food");
+		user.setUserId(userRequest.getUserId());
 		mockUsers.add(user);
 
 	}
@@ -169,7 +169,7 @@ public class UserServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
 
-		Mockito.when(userRepository.findByPreferences("clothing", true, pageable)).thenReturn(mockUserPages);
+		Mockito.when(userRepository.findByPreferences("clothing", true, true, pageable)).thenReturn(mockUserPages);
 		Map<Long, List<UserDTO>> userPages = userService.findUsersByPreferences("clothing", pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {
@@ -214,10 +214,10 @@ public class UserServiceTest {
 		ArrayList<String> deletedPreferenceList = new ArrayList<String>();
 		deletedPreferenceList.add("food");
 		userRequest.setPreferences(deletedPreferenceList);
-		Mockito.when(userService.findByEmail(user.getEmail())).thenReturn(user);
+		Mockito.when(userService.findByUserId(user.getUserId())).thenReturn(user);
 		Mockito.when(userRepository.save(user)).thenReturn(user);
      
-	    UserDTO updateUser = userService.deletePreferencesByUser(userRequest);
+	    UserDTO updateUser = userService.deletePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences());
 		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
 		
 	}

@@ -255,7 +255,7 @@ public class UserService implements IUserService  {
 	public Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable) {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		try {
-			Page<User> userPages = userRepository.findByPreferences(preferences, true, pageable);
+			Page<User> userPages = userRepository.findByPreferences(preferences, true, true, pageable);
 			long totalRecord = userPages.getTotalElements();
 			List<UserDTO> userDTOList = new ArrayList<>();
 			if (totalRecord > 0) {
@@ -316,9 +316,9 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception {
+	public UserDTO deletePreferencesByUser(String userId, List<String> preferences) throws Exception {
 		try {
-			User dbUser = findByEmail(userRequest.getEmail());
+			User dbUser = findByUserId(userId);
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
@@ -329,7 +329,7 @@ public class UserService implements IUserService  {
 			    }
 			    
 			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
-			    List<String> deletedPreferences = userRequest.getPreferences();
+			    List<String> deletedPreferences = preferences;
 			    deletedPreferences.replaceAll(String::trim);
 			    
 			    List<String> updatedPreferences = new ArrayList<>(existingPreferencesList);

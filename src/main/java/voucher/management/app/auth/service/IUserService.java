@@ -30,7 +30,7 @@ public interface IUserService {
 	 
 	 UserDTO checkSpecificActiveUser(String userId);
 	 
-	 UserDTO deletePreferencesByUser(UserRequest userRequest) throws Exception ;
+	 UserDTO deletePreferencesByUser(String userId, List<String> preferences) throws Exception ;
 	 
 	 User findByUserId(String userId);
 }
