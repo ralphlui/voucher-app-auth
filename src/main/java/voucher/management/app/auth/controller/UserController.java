@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -158,8 +159,8 @@ public class UserController {
 
 	}
 
-	@PutMapping(value = "/resetPassword", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> resetPassword(@RequestBody UserRequest resetPwdReq) {
+	@PatchMapping(value = "/{id}/resetPassword", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> resetPassword(@PathVariable("id") String id, @RequestBody UserRequest resetPwdReq) {
 
 		logger.info("Call user resetPassword API...");
 
@@ -167,13 +168,13 @@ public class UserController {
 
 		String message = "";
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(resetPwdReq.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			UserDTO userDTO = userService.resetPassword(resetPwdReq);
+			UserDTO userDTO = userService.resetPassword(id, resetPwdReq.getPassword());
 			message = "Reset Password is completed.";
 			logger.info(message + resetPwdReq.getEmail());
 			logger.info(userDTO.getEmail());

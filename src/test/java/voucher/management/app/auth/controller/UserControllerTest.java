@@ -186,13 +186,14 @@ public class UserControllerTest {
 	@Test
 	public void testResetPassword() throws Exception {
 		testUser.setVerified(true);
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
-		Mockito.when(userService.resetPassword(Mockito.any(UserRequest.class)))
+		userRequest.setUserId(testUser.getUserId());
+		Mockito.when(userService.resetPassword(userRequest.getUserId(), userRequest.getPassword()))
 				.thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/resetPassword", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());

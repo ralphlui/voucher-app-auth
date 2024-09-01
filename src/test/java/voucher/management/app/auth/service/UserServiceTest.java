@@ -189,12 +189,11 @@ public class UserServiceTest {
 	@Test
 	void resetPassword() throws Exception {
 
-		Mockito.when(userRepository.findByEmailAndStatus(user.getEmail(), true, true)).thenReturn(user);
+		Mockito.when(userRepository.findByUserIdAndStatus(user.getUserId(), true, true)).thenReturn(user);
 		Mockito.when(userRepository.save(user)).thenReturn(user);
      
 
-    	UserRequest userRequest = new UserRequest(user.getEmail(), "Pwd@21212");
-		UserDTO updatedUser = userService.resetPassword(userRequest);
+		UserDTO updatedUser = userService.resetPassword(user.getUserId(), user.getPassword());
 		assertThat(updatedUser.getEmail().equals("useradmin@gmail.com")).isTrue();
 
 	}

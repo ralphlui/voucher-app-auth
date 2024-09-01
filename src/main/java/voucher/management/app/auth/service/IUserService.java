@@ -26,7 +26,7 @@ public interface IUserService {
 	 
 	 Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable);
 	 
-	 UserDTO resetPassword(UserRequest userRequest);
+	 UserDTO resetPassword(String userId, String password);
 	 
 	 UserDTO checkSpecificActiveUser(String userId);
 	 

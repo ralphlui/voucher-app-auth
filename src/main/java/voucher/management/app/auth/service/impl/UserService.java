@@ -277,16 +277,16 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public UserDTO resetPassword(UserRequest userRequest) {
+	public UserDTO resetPassword(String userId, String password) {
 		try {
-			User dbUser = findByEmailAndStatus(userRequest.getEmail(), true, true);
+			User dbUser = findByUserIdAndStatus(userId, true, true);
 			if (dbUser == null) {
 
 				throw new UserNotFoundException(
-						"Reset Password failed: Unable to find the user with email :" + userRequest.getEmail());
+						"Reset Password failed: Unable to find the user with this user Id :" + userId);
 			}
 
-			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			dbUser.setPassword(passwordEncoder.encode(password));
 			User updatedUser = userRepository.save(dbUser);
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updatedUser);
 			return updateUserDTO;
