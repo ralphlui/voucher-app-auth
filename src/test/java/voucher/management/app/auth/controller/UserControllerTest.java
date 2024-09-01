@@ -143,12 +143,11 @@ public class UserControllerTest {
 		String verificationCode = encryptionUtils.encrypt(decodedVerificationCode);
 		testUser.setVerified(false);
 		testUser.setActive(true);
-		//testUser.setVerificationCode(decodedVerificationCode);
 		Mockito.when(userService.findByEmailAndStatus(testUser.getEmail(), true, true)).thenReturn(testUser);
 
 		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", verificationCode)
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/verify/{verifyid}", verificationCode)
 				).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());

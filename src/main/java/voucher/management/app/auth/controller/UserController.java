@@ -131,7 +131,7 @@ public class UserController {
 		}
 	}
 
-	@PutMapping(value = "/verify/{verifyid}", produces = "application/json")
+	@PatchMapping(value = "/verify/{verifyid}", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
 		logger.info("Call user verify API with verifyToken={}", verifyid);
 		verifyid = GeneralUtility.makeNotNull(verifyid);

@@ -229,6 +229,7 @@ public class UserService implements IUserService  {
 			String to = user.getEmail();
 
 			String verificationCode = encryptionUtils.encrypt(user.getVerificationCode());
+			logger.info(" Verification Code "+ verificationCode);
 
 			String verifyURL = clientURL + "/components/register/verify/" + verificationCode.trim();
 			logger.info("verifyURL... {}", verifyURL);
