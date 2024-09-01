@@ -82,7 +82,7 @@ public class UserServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
 
-		Mockito.when(userRepository.findByIsActiveTrue(pageable)).thenReturn(mockUserPages);
+		Mockito.when(userRepository.findActiveUserList(true, true, pageable)).thenReturn(mockUserPages);
 		Map<Long, List<UserDTO>> userPages = userService.findActiveUsers(pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {

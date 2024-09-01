@@ -55,7 +55,7 @@ public class UserService implements IUserService  {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		List<UserDTO> userDTOList = new ArrayList<>();
 		try {
-			Page<User> userPages = userRepository.findByIsActiveTrue(pageable);
+			Page<User> userPages = userRepository.findActiveUserList(true, true, pageable);
 			long totalRecord = userPages.getTotalElements();
 			if (totalRecord > 0) {
 				for (User user : userPages.getContent()) {

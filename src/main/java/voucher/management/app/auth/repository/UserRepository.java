@@ -11,7 +11,8 @@ import voucher.management.app.auth.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-	Page<User> findByIsActiveTrue(Pageable pageable);
+	@Query("SELECT u FROM User u WHERE u.isActive = ?1 AND u.isVerified = ?2")
+	Page<User> findActiveUserList(boolean isActive, boolean isVerified, Pageable pageable);
 	
 	User save(User user);
 	
