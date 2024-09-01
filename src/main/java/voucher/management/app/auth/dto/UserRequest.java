@@ -7,6 +7,7 @@ import voucher.management.app.auth.enums.RoleType;
 public class UserRequest {
 
 	private String email;
+	private String userId;
 	private String username;
 	private String password;
 	private Boolean active;
@@ -27,12 +28,22 @@ public class UserRequest {
 	public UserRequest(String email, String password, String username, RoleType role, Boolean active,
 			List<String> preferences) {
 		super();
+		
 		this.email = email;
 		this.password = password;
 		this.username = username;
 		this.role = role;
 		this.active = active;
 		this.preferences = preferences;
+	}
+	
+	public UserRequest(String userId, String email, String password, String username, RoleType role, Boolean active) {
+		super();
+		
+		this.password = password;
+		this.username = username;
+		this.role = role;
+		this.active = active;
 	}
 
 	public String getEmail() {
@@ -91,4 +102,11 @@ public class UserRequest {
 		this.preferences = preferences;
 	}
 
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
 }

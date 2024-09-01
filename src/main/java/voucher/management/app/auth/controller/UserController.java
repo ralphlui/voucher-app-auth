@@ -187,15 +187,16 @@ public class UserController {
 
 	}
 
-	@PutMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> updateUser(@RequestBody UserRequest userRequest) {
+	@PutMapping(value = "/{id}", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> updateUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user update API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateUpdating(userRequest);
+			ValidationResult validationResult = userValidationStrategy.validateUpdating(id);
 			if (validationResult.isValid()) {
 
+				userRequest.setUserId(id);
 				UserDTO userDTO = userService.update(userRequest);
 				message = "User updated successfully.";
 				logger.info(message + userRequest.getEmail());

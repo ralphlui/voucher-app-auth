@@ -171,7 +171,8 @@ public class UserService implements IUserService  {
 	@Override
 	public UserDTO update(UserRequest userRequest) {
 		try {
-			User dbUser = findByEmail(userRequest.getEmail());
+		
+			User dbUser = findByUserId(userRequest.getUserId());
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}

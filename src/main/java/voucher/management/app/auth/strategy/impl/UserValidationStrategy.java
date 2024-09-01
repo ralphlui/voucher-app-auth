@@ -65,11 +65,11 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 	
 	
 	@Override
-	public ValidationResult validateUpdating(UserRequest userRequest) {
+	public ValidationResult validateUpdating(String userId) {
 		ValidationResult validationResult = new ValidationResult();
 
-		if (userRequest.getEmail() == null || userRequest.getEmail().isEmpty()) {
-			validationResult.setMessage("Email cannot be empty.");
+		if (userId == null || userId.isEmpty()) {
+			validationResult.setMessage("User ID cannot be empty.");
 			validationResult.setStatus(HttpStatus.BAD_REQUEST);
 			validationResult.setValid(false);
 			return validationResult;

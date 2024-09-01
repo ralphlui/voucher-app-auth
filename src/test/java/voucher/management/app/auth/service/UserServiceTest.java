@@ -62,7 +62,8 @@ public class UserServiceTest {
 		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
 		user = new User(userRequest.getEmail(), userRequest.getUsername(), "Pwd@123", RoleType.ADMIN, true);
 		user.setPreferences("food");
-		user.setUserId("8e67a5b7-f30c-4051-bfe4-64533aafe204");
+		user.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
+		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
 		mockUsers.add(user);
 
 	}
@@ -141,7 +142,7 @@ public class UserServiceTest {
 		user.setActive(userRequest.getActive());
 		user.setUsername(userRequest.getUsername());
 		user.setUpdatedDate(LocalDateTime.now());
-		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(user);
+		Mockito.when(userService.findByUserId(user.getUserId())).thenReturn(user);
 
 		Mockito.when(userRepository.save(user)).thenReturn(user);
 		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));

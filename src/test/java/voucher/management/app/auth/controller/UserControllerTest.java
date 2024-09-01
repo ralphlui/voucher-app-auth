@@ -73,12 +73,13 @@ public class UserControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		userRequest.setEmail("useradmin@gmail.com");
+		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@21212", "UserAdmin", RoleType.MERCHANT, true, new ArrayList<String>());
+		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
 		testUser = new User(userRequest.getEmail(), "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
 		errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 		testUser.setPreferences("food");
 		testUser.setEmail(userRequest.getEmail());
-		testUser.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
+		testUser.setUserId(userRequest.getUserId());
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
 	}
@@ -90,7 +91,6 @@ public class UserControllerTest {
 		userRequest = new UserRequest();
 
 	}
-
 	
 	@Test
 	public void testGetAllUser() throws Exception {
@@ -164,57 +164,49 @@ public class UserControllerTest {
 		
 	}
 	
-
 	@Test
 	public void testCreateUser() throws Exception {
-		Mockito.when(userService.createUser(Mockito.any(UserRequest.class)))
-	   .thenReturn(DTOMapper.toUserDTO(testUser));
-		
+		Mockito.when(userService.createUser(Mockito.any(UserRequest.class))).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
-				.contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
-		
+
 		User errorUser = new User("", "Error", "Pwd@21212", RoleType.MERCHANT, true);
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
-				.contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(errorUser)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-		        .andExpect(jsonPath("$.success").value(false))
-		        .andExpect(jsonPath("$.message").value("Email cannot be empty."))
-		        .andDo(print());
-		
-    }
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.message").value("Email cannot be empty.")).andDo(print());
+	}
 
 	@Test
 	public void testResetPassword() throws Exception {
 		testUser.setVerified(true);
 		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		
+
 		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.resetPassword(Mockito.any(UserRequest.class)))
-		   .thenReturn(DTOMapper.toUserDTO(testUser));
+				.thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(userRequest)))
-				.andExpect(MockMvcResultMatchers.status().isOk())
+				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());
 	}
-	
 
 	@Test
 	public void testUpdatedUser() throws Exception {
-		testUser.setVerified(true);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
+		
 		Mockito.when(userService.update(Mockito.any(UserRequest.class)))
 		   .thenReturn(DTOMapper.toUserDTO(testUser));
 
 		
-	   mockMvc.perform(MockMvcRequestBuilders.put("/api/users")
+	   mockMvc.perform(MockMvcRequestBuilders.put("/api/users/{id}", testUser.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
