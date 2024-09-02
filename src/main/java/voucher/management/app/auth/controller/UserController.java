@@ -304,5 +304,33 @@ public class UserController {
 		}
 
 	}
+	
+	
+	@PatchMapping(value = "/{id}/preferences", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> updatereferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
+		logger.info("Call user update Preferences API...");
+		String message;
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
+			if (validationResult.isValid()) {
+
+				UserDTO userDTO = userService.updatePreferencesByUser(id, userRequest.getPreferences());
+				message = "Preferences are updated successfully.";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+			} else {
+				message = validationResult.getMessage();
+				logger.error(message);
+				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			message = e.getMessage();
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
+					: HttpStatus.BAD_REQUEST;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
+		}
+
+	}
 
 }

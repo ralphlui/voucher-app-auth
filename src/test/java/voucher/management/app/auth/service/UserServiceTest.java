@@ -221,5 +221,18 @@ public class UserServiceTest {
 		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
 		
 	}
+	
+	@Test
+	void updatePreferencesByUser() throws Exception {
+
+		ArrayList<String> updatedPreferenceList = new ArrayList<String>();
+		updatedPreferenceList.add("clothing");
+		Mockito.when(userService.findByUserId(user.getUserId())).thenReturn(user);
+		Mockito.when(userRepository.save(user)).thenReturn(user);
+     
+	    UserDTO updateUser = userService.updatePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences());
+		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
+		
+	}
 
 }

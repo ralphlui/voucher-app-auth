@@ -4,10 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -87,7 +85,7 @@ public class UserService implements IUserService  {
 			user.setActive(true);
 			user.setRole(userReq.getRole());
 			user.setCreatedDate(LocalDateTime.now());
-			String preferences = addNewPreferences(userReq);
+			String preferences = formatPreferencesString(userReq.getPreferences());
 			user.setPreferences(preferences);
 			User createdUser = userRepository.save(user);
 
@@ -180,14 +178,8 @@ public class UserService implements IUserService  {
 			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 			dbUser.setActive(userRequest.getActive());
 			dbUser.setUpdatedDate(LocalDateTime.now());
-			if (!dbUser.getPreferences().isEmpty()) {
-				logger.info("Existing preferences");
-				addExistingPreferences(userRequest,dbUser);
-			} else {
-				logger.info("New preferences");
-				String preferences = addNewPreferences(userRequest);
-				dbUser.setPreferences(preferences);
-			}
+			String preferences = formatPreferencesString(userRequest.getPreferences());
+			dbUser.setPreferences(preferences);
 			User updateUser = userRepository.save(dbUser);
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 			return updateUserDTO;
@@ -199,23 +191,23 @@ public class UserService implements IUserService  {
 
 	}
 	
-	private String addNewPreferences(UserRequest userReq) {
-		String preferences =  userReq.getPreferences() == null ? "" : String.join(",", userReq.getPreferences());
+	private String formatPreferencesString(List<String> preferencesList) {
+		String preferences = preferencesList == null ? "" : String.join(",", preferencesList);
 		String removedWhiteSpacePreferences = preferences.replaceAll("\\s*,\\s*", ",");
 		return removedWhiteSpacePreferences.trim();
 	}
 	
-	private void addExistingPreferences(UserRequest userRequest, User dbUser) {
-		String[] preferencesArray = dbUser.getPreferences().split(",");
-		 Set<String> uniqueValuesSet = new HashSet<>(Arrays.asList(preferencesArray));
-		for (String preference : userRequest.getPreferences()) {
-			if (!uniqueValuesSet.contains(preference.trim())) {
-				uniqueValuesSet.add(preference.trim());
-			}
-		}
-		String preferences = String.join(",", uniqueValuesSet);
-		dbUser.setPreferences(preferences);
-	}
+//	private void addExistingPreferences(UserRequest userRequest, User dbUser) {
+//		String[] preferencesArray = dbUser.getPreferences().split(",");
+//		 Set<String> uniqueValuesSet = new HashSet<>(Arrays.asList(preferencesArray));
+//		for (String preference : userRequest.getPreferences()) {
+//			if (!uniqueValuesSet.contains(preference.trim())) {
+//				uniqueValuesSet.add(preference.trim());
+//			}
+//		}
+//		String preferences = String.join(",", uniqueValuesSet);
+//		dbUser.setPreferences(preferences);
+//	}
 	
 
 	public void sendVerificationEmail(User user) {
@@ -346,6 +338,31 @@ public class UserService implements IUserService  {
 				UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 				return updateUserDTO;
 			
+		} catch (Exception e) {
+			logger.error("Error occurred while user deleting preferences, " + e.toString());
+			e.printStackTrace();
+			throw e;
+
+		}
+	}
+	
+	@Override
+	public UserDTO updatePreferencesByUser(String userId, List<String> preferences) throws Exception {
+		try {
+			User dbUser = findByUserId(userId);
+			if (dbUser == null) {
+				throw new UserNotFoundException("User not found.");
+			}
+
+			String updatedPreferences = formatPreferencesString(preferences);
+			dbUser.setPreferences(updatedPreferences.trim());
+
+			dbUser.setUpdatedDate(LocalDateTime.now());
+
+			User updateUser = userRepository.save(dbUser);
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+			return updateUserDTO;
+
 		} catch (Exception e) {
 			logger.error("Error occurred while user deleting preferences, " + e.toString());
 			e.printStackTrace();

@@ -33,4 +33,6 @@ public interface IUserService {
 	 UserDTO deletePreferencesByUser(String userId, List<String> preferences) throws Exception ;
 	 
 	 User findByUserId(String userId);
+	 
+	 UserDTO updatePreferencesByUser(String userId, List<String> preferences) throws Exception;
 }

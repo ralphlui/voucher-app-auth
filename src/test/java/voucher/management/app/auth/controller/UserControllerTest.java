@@ -285,4 +285,23 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
 	}
+	
+	@Test
+	void testUpdatedPreferencesByUser() throws Exception {
+
+		testUser.setVerified(true);
+		ArrayList<String> updatedPreferenceList = new ArrayList<String>();
+		updatedPreferenceList.add("clothing");
+		
+		Mockito.when(userService.findByUserId(userRequest.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.updatePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences()))
+				.thenReturn(DTOMapper.toUserDTO(testUser));
+
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", userRequest.getUserId())
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userRequest)))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+	}
 }
