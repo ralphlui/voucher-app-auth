@@ -4,10 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -55,7 +53,7 @@ public class UserService implements IUserService  {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		List<UserDTO> userDTOList = new ArrayList<>();
 		try {
-			Page<User> userPages = userRepository.findByIsActiveTrue(pageable);
+			Page<User> userPages = userRepository.findActiveUserList(true, true, pageable);
 			long totalRecord = userPages.getTotalElements();
 			if (totalRecord > 0) {
 				for (User user : userPages.getContent()) {
@@ -74,31 +72,38 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User createUser(User user) {
+	public UserDTO createUser(UserRequest userReq) throws Exception {
 		try {
-			String encodedPassword = passwordEncoder.encode(user.getPassword());
+			User user = new User();
+			user.setEmail(userReq.getEmail());
+			user.setUsername(userReq.getUsername());
+			String encodedPassword = passwordEncoder.encode(userReq.getPassword());
 			user.setPassword(encodedPassword);
 			String code = UUID.randomUUID().toString();
 			user.setVerificationCode(code);
 			user.setVerified(false);
 			user.setActive(true);
+			user.setRole(userReq.getRole());
 			user.setCreatedDate(LocalDateTime.now());
-			String preferences = addNewPreferences(user);
+			String preferences = formatPreferencesString(userReq.getPreferences());
 			user.setPreferences(preferences);
 			User createdUser = userRepository.save(user);
 
-			if (createdUser != null) {
-				String verificationCode = encryptionUtils.encrypt(createdUser.getVerificationCode());
-				logger.info("verification code"+ verificationCode);
-				sendVerificationEmail(createdUser);
+			if (createdUser == null) {
+				throw new Exception("User registration is not successful");
 			}
 
-			return createdUser;
+			String verificationCode = encryptionUtils.encrypt(createdUser.getVerificationCode());
+			logger.info("verification code" + verificationCode);
+			sendVerificationEmail(createdUser);
+
+			UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
+			return userDTO;
 
 		} catch (Exception e) {
 			logger.error("Error occurred while user creating, " + e.toString());
 			e.printStackTrace();
-			return null;
+			throw e;
 
 		}
 	}
@@ -109,14 +114,21 @@ public class UserService implements IUserService  {
 
 		return userRepository.findByEmail(email);
 	}
+	
+	
+	@Override
+	public User findByUserId(String userId) {
+
+		return userRepository.findByUserId(userId);
+	}
 
 
 	@Override
-	public User loginUser(String email, String password) {
+	public UserDTO loginUser(String email, String password) {
 		try {
 			User user = userRepository.findByEmailAndStatus(email, true, true);
 			if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-				return user;
+				return DTOMapper.toUserDTO(user);
 			}
 			throw new UserNotFoundException("Invalid Credentials");
 		} catch (Exception e) {
@@ -127,7 +139,7 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User verifyUser(String verificationCode) throws Exception {
+	public UserDTO verifyUser(String verificationCode) throws Exception {
 		String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);
 		User user = userRepository.findByVerificationCode(decodedVerificationCode, false, true);
 		if (user == null) {
@@ -136,10 +148,11 @@ public class UserService implements IUserService  {
 		user.setVerified(true);
 		user.setUpdatedDate(LocalDateTime.now());
 		User verifiedUser = userRepository.save(user);
-		if (verifiedUser == null) {
+		UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+		if (userDTO == null) {
 			throw new UserNotFoundException("Vefriy user failed: Verfiy Id is invalid or already verified.");
 		}
-		return verifiedUser;
+		return userDTO;
 	}
 
 	@Override
@@ -148,28 +161,28 @@ public class UserService implements IUserService  {
 		return userRepository.findByEmailAndStatus(email, isActive, isVerified);
 	}
 	
+	public User findByUserIdAndStatus(String userId, boolean isActive, boolean isVerified) {
+
+		return userRepository.findByUserIdAndStatus(userId, isActive, isVerified);
+	}
+	
 	@Override
-	public User update(User user) {
+	public UserDTO update(UserRequest userRequest) {
 		try {
-			User dbUser = findByEmail(user.getEmail());
+		
+			User dbUser = findByUserId(userRequest.getUserId());
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
-			dbUser.setUsername(user.getUsername());
-			dbUser.setPassword(passwordEncoder.encode(user.getPassword()));
-			dbUser.setRole(user.getRole());
-			dbUser.setActive(user.isActive());
+			dbUser.setUsername(userRequest.getUsername());
+			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			dbUser.setActive(userRequest.getActive());
 			dbUser.setUpdatedDate(LocalDateTime.now());
-			if (!dbUser.getPreferences().isEmpty()) {
-				logger.info("Existing preferences");
-				addExistingPreferences(user,dbUser);
-			} else {
-				logger.info("New preferences");
-				String preferences = addNewPreferences(user);
-				dbUser.setPreferences(preferences);
-			}
+			String preferences = formatPreferencesString(userRequest.getPreferences());
+			dbUser.setPreferences(preferences);
 			User updateUser = userRepository.save(dbUser);
-			return updateUser;
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+			return updateUserDTO;
 		} catch (Exception e) {
 			logger.error("Error occurred while user updating, " + e.toString());
 			e.printStackTrace();
@@ -178,23 +191,23 @@ public class UserService implements IUserService  {
 
 	}
 	
-	private String addNewPreferences(User user) {
-		String preferences =  user.getCategories() == null ? "" : String.join(",", user.getCategories());
-		String cleanedStrPreferences = preferences.replaceAll("\\s*,\\s*", ",");
-		return cleanedStrPreferences.trim();
+	private String formatPreferencesString(List<String> preferencesList) {
+		String preferences = preferencesList == null ? "" : String.join(",", preferencesList);
+		String removedWhiteSpacePreferences = preferences.replaceAll("\\s*,\\s*", ",");
+		return removedWhiteSpacePreferences.trim();
 	}
 	
-	private void addExistingPreferences(User user, User dbUser) {
-		String[] preferencesArray = dbUser.getPreferences().split(",");
-		 Set<String> uniqueValuesSet = new HashSet<>(Arrays.asList(preferencesArray));
-		for (String category : user.getCategories()) {
-			if (!uniqueValuesSet.contains(category.trim())) {
-				uniqueValuesSet.add(category.trim());
-			}
-		}
-		String preferences = String.join(",", uniqueValuesSet);
-		dbUser.setPreferences(preferences);
-	}
+//	private void addExistingPreferences(UserRequest userRequest, User dbUser) {
+//		String[] preferencesArray = dbUser.getPreferences().split(",");
+//		 Set<String> uniqueValuesSet = new HashSet<>(Arrays.asList(preferencesArray));
+//		for (String preference : userRequest.getPreferences()) {
+//			if (!uniqueValuesSet.contains(preference.trim())) {
+//				uniqueValuesSet.add(preference.trim());
+//			}
+//		}
+//		String preferences = String.join(",", uniqueValuesSet);
+//		dbUser.setPreferences(preferences);
+//	}
 	
 
 	public void sendVerificationEmail(User user) {
@@ -208,6 +221,7 @@ public class UserService implements IUserService  {
 			String to = user.getEmail();
 
 			String verificationCode = encryptionUtils.encrypt(user.getVerificationCode());
+			logger.info(" Verification Code "+ verificationCode);
 
 			String verifyURL = clientURL + "/components/register/verify/" + verificationCode.trim();
 			logger.info("verifyURL... {}", verifyURL);
@@ -233,7 +247,7 @@ public class UserService implements IUserService  {
 	public Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable) {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		try {
-			Page<User> userPages = userRepository.findByPreferences(preferences, true, pageable);
+			Page<User> userPages = userRepository.findByPreferences(preferences, true, true, pageable);
 			long totalRecord = userPages.getTotalElements();
 			List<UserDTO> userDTOList = new ArrayList<>();
 			if (totalRecord > 0) {
@@ -256,18 +270,19 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User resetPassword(UserRequest userRequest) {
+	public UserDTO resetPassword(String userId, String password) {
 		try {
-			User dbUser = findByEmailAndStatus(userRequest.getEmail(), true, true);
+			User dbUser = findByUserIdAndStatus(userId, true, true);
 			if (dbUser == null) {
 
 				throw new UserNotFoundException(
-						"Reset Password failed: Unable to find the user with email :" + userRequest.getEmail());
+						"Reset Password failed: Unable to find the user with this user Id :" + userId);
 			}
 
-			dbUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			dbUser.setPassword(passwordEncoder.encode(password));
 			User updatedUser = userRepository.save(dbUser);
-			return updatedUser;
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updatedUser);
+			return updateUserDTO;
 
 		} catch (Exception e) {
 			logger.error("Error occurred while validateUserLogin, " + e.toString());
@@ -277,14 +292,13 @@ public class UserService implements IUserService  {
 	}
 	
 	@Override
-	public User checkSpecificActiveUser(String email) {
+	public UserDTO checkSpecificActiveUser(String userId) {
 		try {
-			User user = findByEmailAndStatus(email, true, true);
+			User user = findByUserIdAndStatus(userId, true, true);
 			if (user == null) {
-				throw new UserNotFoundException(email +
-						" is not an active user");
+				throw new UserNotFoundException("This user is not an active user");
 			}
-			return user;
+			return DTOMapper.toUserDTO(user);
 			
 		} catch (Exception e) {
 			logger.error("Error occurred while checking specific active User, " + e.toString());
@@ -294,9 +308,9 @@ public class UserService implements IUserService  {
 	}
 
 	@Override
-	public User deletePreferencesByUser(User user) throws Exception {
+	public UserDTO deletePreferencesByUser(String userId, List<String> preferences) throws Exception {
 		try {
-			User dbUser = findByEmail(user.getEmail());
+			User dbUser = findByUserId(userId);
 			if (dbUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
@@ -307,7 +321,7 @@ public class UserService implements IUserService  {
 			    }
 			    
 			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
-			    List<String> deletedPreferences = user.getCategories();
+			    List<String> deletedPreferences = preferences;
 			    deletedPreferences.replaceAll(String::trim);
 			    
 			    List<String> updatedPreferences = new ArrayList<>(existingPreferencesList);
@@ -321,8 +335,34 @@ public class UserService implements IUserService  {
 			    dbUser.setUpdatedDate(LocalDateTime.now());
 
 				User updateUser = userRepository.save(dbUser);
-				return updateUser;
+				UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+				return updateUserDTO;
 			
+		} catch (Exception e) {
+			logger.error("Error occurred while user deleting preferences, " + e.toString());
+			e.printStackTrace();
+			throw e;
+
+		}
+	}
+	
+	@Override
+	public UserDTO updatePreferencesByUser(String userId, List<String> preferences) throws Exception {
+		try {
+			User dbUser = findByUserId(userId);
+			if (dbUser == null) {
+				throw new UserNotFoundException("User not found.");
+			}
+
+			String updatedPreferences = formatPreferencesString(preferences);
+			dbUser.setPreferences(updatedPreferences.trim());
+
+			dbUser.setUpdatedDate(LocalDateTime.now());
+
+			User updateUser = userRepository.save(dbUser);
+			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+			return updateUserDTO;
+
 		} catch (Exception e) {
 			logger.error("Error occurred while user deleting preferences, " + e.toString());
 			e.printStackTrace();

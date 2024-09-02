@@ -1,7 +1,6 @@
 package voucher.management.app.auth.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import org.hibernate.annotations.UuidGenerator;
 
@@ -10,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -73,7 +71,5 @@ public class User {
 	@Column(nullable = true, columnDefinition = "varchar(255)")
 	private String preferences;
 	
-	@Transient
-	private ArrayList<String> categories;
 }
 

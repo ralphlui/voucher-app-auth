@@ -65,14 +65,20 @@ public class UserControllerTest {
 
 	
 	User testUser;
+	User errorUser;
+	UserRequest userRequest = new UserRequest();
 
 	private static List<UserDTO> mockUsers = new ArrayList<>();
-	User errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
+
 
 	@BeforeEach
 	void setUp() {
-		testUser = new User("antonia@gmail.com", "Antonia", "Pwd@21212", RoleType.MERCHANT, true);
+		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@21212", "UserAdmin", RoleType.MERCHANT, true, new ArrayList<String>());
+		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
+		testUser = new User(userRequest.getEmail(), userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole(), true);
+		errorUser = new User("error@gmail.com", "Error", "Pwd@21212", RoleType.MERCHANT, true);
 		testUser.setPreferences("food");
+		testUser.setUserId(userRequest.getUserId());
 
 		mockUsers.add(DTOMapper.toUserDTO(testUser));
 	}
@@ -81,9 +87,9 @@ public class UserControllerTest {
 	public void tearDown() {
 		testUser = new User();
 		errorUser = new User();
+		userRequest = new UserRequest();
 
 	}
-
 	
 	@Test
 	public void testGetAllUser() throws Exception {
@@ -104,10 +110,9 @@ public class UserControllerTest {
 	@Test
 	public void testUserLogin() throws Exception {
 		testUser.setVerified(true);
-		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
-		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(testUser);
+		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
@@ -136,20 +141,18 @@ public class UserControllerTest {
 		String verificationCode = encryptionUtils.encrypt(decodedVerificationCode);
 		testUser.setVerified(false);
 		testUser.setActive(true);
-		testUser.setVerificationCode(decodedVerificationCode);
 		Mockito.when(userService.findByEmailAndStatus(testUser.getEmail(), true, true)).thenReturn(testUser);
 
-		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(testUser);
+		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", verificationCode)
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/verify/{verifyid}", verificationCode)
 				).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());
 		
 		
-        String emptyDecodedVerificationCode = "";
-		String emptyVerificationCode = encryptionUtils.encrypt(emptyDecodedVerificationCode);
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", emptyVerificationCode)
+  
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/verify/{verifyid}", "")
 				).andExpect(MockMvcResultMatchers.status().isInternalServerError())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false)).
@@ -158,59 +161,52 @@ public class UserControllerTest {
 		
 	}
 	
-
 	@Test
 	public void testCreateUser() throws Exception {
-		Mockito.when(userService.createUser(Mockito.any(User.class)))
-	   .thenReturn(testUser);
-		
+		Mockito.when(userService.createUser(Mockito.any(UserRequest.class))).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userRequest)))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
-		
+
 		User errorUser = new User("", "Error", "Pwd@21212", RoleType.MERCHANT, true);
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
-				.contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(errorUser)))
-		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-		        .andExpect(jsonPath("$.success").value(false))
-		        .andExpect(jsonPath("$.message").value("Email cannot be empty."))
-		        .andDo(print());
-		
-    }
-	
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.message").value("Email cannot be empty.")).andDo(print());
+	}
+
 	@Test
 	public void testResetPassword() throws Exception {
 		testUser.setVerified(true);
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		
-		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
-		Mockito.when(userService.resetPassword(Mockito.any(UserRequest.class)))
-		   .thenReturn(testUser);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/resetPassword").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(userRequest)))
-				.andExpect(MockMvcResultMatchers.status().isOk())
+		UserRequest userRequest = new UserRequest(testUser.getEmail(), "Pwd@21212");
+		userRequest.setUserId(testUser.getUserId());
+		Mockito.when(userService.resetPassword(userRequest.getUserId(), userRequest.getPassword()))
+				.thenReturn(DTOMapper.toUserDTO(testUser));
+
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/resetPassword", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true)).andDo(print());
 	}
-	
 
 	@Test
 	public void testUpdatedUser() throws Exception {
-		testUser.setVerified(true);
-		Mockito.when(userService.update(Mockito.any(User.class)))
-		   .thenReturn(testUser);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
+		
+		Mockito.when(userService.update(Mockito.any(UserRequest.class)))
+		   .thenReturn(DTOMapper.toUserDTO(testUser));
 
 		
-	   mockMvc.perform(MockMvcRequestBuilders.put("/api/users")
+	   mockMvc.perform(MockMvcRequestBuilders.put("/api/users/{id}", testUser.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
@@ -229,11 +225,11 @@ public class UserControllerTest {
 	@Test
 	public void testActiveUser() throws Exception {
 		testUser.setVerified(true);
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.checkSpecificActiveUser(testUser.getEmail())).thenReturn(testUser);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.checkSpecificActiveUser(testUser.getUserId())).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/active").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
@@ -271,17 +267,39 @@ public class UserControllerTest {
 	void testDeletePreferencesByUser() throws Exception {
 		
 		testUser.setVerified(true);
-		testUser.setUsername("khin");
-		Mockito.when(userService.findByEmail(testUser.getEmail())).thenReturn(testUser);
-		Mockito.when(userService.deletePreferencesByUser(Mockito.any(User.class)))
-		   .thenReturn(testUser);
+		ArrayList<String> deletedPreferenceList = new ArrayList<String>();
+		deletedPreferenceList.add("food");
+		userRequest.setPreferences(deletedPreferenceList);
+		
+		Mockito.when(userService.findByUserId(userRequest.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.deletePreferencesByUser(userRequest.getUserId(),userRequest.getPreferences()))
+		   .thenReturn(DTOMapper.toUserDTO(testUser));
 		
 
 		
-		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/preferences")
+		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/{id}/preferences", userRequest.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(testUser)))
+				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
+				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());
+	}
+	
+	@Test
+	void testUpdatedPreferencesByUser() throws Exception {
+
+		testUser.setVerified(true);
+		ArrayList<String> updatedPreferenceList = new ArrayList<String>();
+		updatedPreferenceList.add("clothing");
+		
+		Mockito.when(userService.findByUserId(userRequest.getUserId())).thenReturn(testUser);
+		Mockito.when(userService.updatePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences()))
+				.thenReturn(DTOMapper.toUserDTO(testUser));
+
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", userRequest.getUserId())
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userRequest)))
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 				.andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(testUser.getRole().toString())).andDo(print());

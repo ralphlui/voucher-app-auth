@@ -12,23 +12,27 @@ import voucher.management.app.auth.entity.User;
 public interface IUserService {
 	Map<Long, List<UserDTO>> findActiveUsers(Pageable pageable);
 	
-	 User createUser(User user);
+	 UserDTO createUser(UserRequest userReq) throws Exception;
 	 
 	 User findByEmail(String email);
 	 
-	 User loginUser(String email, String password);
+	 UserDTO loginUser(String email, String password);
 	 
-	 User verifyUser(String verificationCode) throws Exception;
+	 UserDTO verifyUser(String verificationCode) throws Exception;
 	 
 	 User findByEmailAndStatus(String email, boolean isActive, boolean isVerified);
 	 
-	 User update(User user);
+	 UserDTO update(UserRequest userRequest);
 	 
 	 Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable);
 	 
-	 User resetPassword(UserRequest userRequest);
+	 UserDTO resetPassword(String userId, String password);
 	 
-	 User checkSpecificActiveUser(String email);
+	 UserDTO checkSpecificActiveUser(String userId);
 	 
-	 User deletePreferencesByUser(User user) throws Exception ;
+	 UserDTO deletePreferencesByUser(String userId, List<String> preferences) throws Exception ;
+	 
+	 User findByUserId(String userId);
+	 
+	 UserDTO updatePreferencesByUser(String userId, List<String> preferences) throws Exception;
 }

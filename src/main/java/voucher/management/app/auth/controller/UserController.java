@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,11 +26,9 @@ import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.dto.ValidationResult;
-import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
-import voucher.management.app.auth.utility.DTOMapper;
 import voucher.management.app.auth.utility.GeneralUtility;
 
 import org.springframework.data.domain.Sort;
@@ -83,17 +82,16 @@ public class UserController {
 	}
 
 	@PostMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody User user) {
+	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user create API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateCreation(user);
+			ValidationResult validationResult = userValidationStrategy.validateCreation(userRequest);
 			if (validationResult.isValid()) {
 
-				User createdUser = userService.createUser(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(createdUser);
-				message = user.getEmail() + " is created successfully";
+				UserDTO userDTO = userService.createUser(userRequest);
+				message = userRequest.getEmail() + " is created successfully";
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
@@ -102,7 +100,7 @@ public class UserController {
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
-			message = "Error: " + e.toString();
+			message = "Error: " + e.getMessage();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
 		}
 
@@ -121,9 +119,8 @@ public class UserController {
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
-			UserDTO userDTO = DTOMapper.toUserDTO(user);
-			message = user.getEmail() + " login successfully";
+			UserDTO userDTO = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
+			message = userDTO.getEmail() + " login successfully";
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			
 		} catch (Exception e) {
@@ -134,7 +131,7 @@ public class UserController {
 		}
 	}
 
-	@PutMapping(value = "/verify/{verifyid}", produces = "application/json")
+	@PatchMapping(value = "/verify/{verifyid}", produces = "application/json")
 	public ResponseEntity<APIResponse<UserDTO>> verifyUser(@PathVariable("verifyid") String verifyid) {
 		logger.info("Call user verify API with verifyToken={}", verifyid);
 		verifyid = GeneralUtility.makeNotNull(verifyid);
@@ -143,10 +140,9 @@ public class UserController {
 		String message = "";
 		try {
 			if (!verifyid.isEmpty()) {
-				User verifiedUser = userService.verifyUser(verifyid);
-				UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+				UserDTO verifiedUserDTO = userService.verifyUser(verifyid);
 				message = "User successfully verified.";
-				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(verifiedUserDTO, message));
 
 			} else {
 
@@ -163,8 +159,8 @@ public class UserController {
 
 	}
 
-	@PutMapping(value = "/resetPassword", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> resetPassword(@RequestBody UserRequest resetPwdReq) {
+	@PatchMapping(value = "/{id}/resetPassword", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> resetPassword(@PathVariable("id") String id, @RequestBody UserRequest resetPwdReq) {
 
 		logger.info("Call user resetPassword API...");
 
@@ -172,17 +168,16 @@ public class UserController {
 
 		String message = "";
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(resetPwdReq.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User modifiedUser = userService.resetPassword(resetPwdReq);
+			UserDTO userDTO = userService.resetPassword(id, resetPwdReq.getPassword());
 			message = "Reset Password is completed.";
 			logger.info(message + resetPwdReq.getEmail());
-			logger.info(modifiedUser.getEmail());
-			UserDTO userDTO = DTOMapper.toUserDTO(modifiedUser);
+			logger.info(userDTO.getEmail());
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
@@ -193,19 +188,19 @@ public class UserController {
 
 	}
 
-	@PutMapping(value = "", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> updateUser(@RequestBody User user) {
+	@PutMapping(value = "/{id}", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> updateUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user update API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateUpdating(user);
+			ValidationResult validationResult = userValidationStrategy.validateUpdating(id);
 			if (validationResult.isValid()) {
 
-				User updatedUser = userService.update(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				userRequest.setUserId(id);
+				UserDTO userDTO = userService.update(userRequest);
 				message = "User updated successfully.";
-				logger.info(message + user.getEmail());
+				logger.info(message + userRequest.getEmail());
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 			} else {
@@ -223,22 +218,21 @@ public class UserController {
 		}
 	}
 
-	@GetMapping(value = "/active", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@RequestBody UserRequest userRequest) {
+	@GetMapping(value = "/{id}/active", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> checkSpecificActiveUser(@PathVariable("id") String id) {
 		logger.info("Call user active API...");
-		logger.info("email" + userRequest.getEmail());
+		logger.info("User ID" + id);
 		String message = "";
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
-			User user = userService.checkSpecificActiveUser(userRequest.getEmail());
-			UserDTO userDTO = DTOMapper.toUserDTO(user);
-			message = user.getEmail() + " is Active";
+			UserDTO userDTO = userService.checkSpecificActiveUser(id);
+			message = userDTO.getEmail() + " is Active";
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
@@ -249,16 +243,16 @@ public class UserController {
 		}
 	}
 
-	@GetMapping(value = "/preferences/{preference}", produces = "application/json")
+	@GetMapping(value = "/preferences/{name}", produces = "application/json")
 	public ResponseEntity<APIResponse<List<UserDTO>>> getAllUsersByPreferences(
-			@PathVariable("preference") String preference, @RequestParam(defaultValue = "0") int page,
+			@PathVariable("name") String name, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API By Preferences with page={}, size={}", page, size);
 
 		try {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
-			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(preference,pageable);
+			Map<Long, List<UserDTO>> resultMap = userService.findUsersByPreferences(name, pageable);
 			
 			Map.Entry<Long, List<UserDTO>> firstEntry = resultMap.entrySet().iterator().next();
 			long totalRecord = firstEntry.getKey();
@@ -284,18 +278,45 @@ public class UserController {
 		}
 	}
 	
-	@DeleteMapping(value = "/preferences", produces = "application/json")
-	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@RequestBody User user) {
+	@DeleteMapping(value = "/{id}/preferences", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user Delete Preferences API...");
 		String message;
 
 		try {
-			ValidationResult validationResult = userValidationStrategy.validateObject(user.getEmail());
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (validationResult.isValid()) {
 
-				User updatedUser = userService.deletePreferencesByUser(user);
-				UserDTO userDTO = DTOMapper.toUserDTO(updatedUser);
+				UserDTO userDTO = userService.deletePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences deleted successfully.";
+				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+			} else {
+				message = validationResult.getMessage();
+				logger.error(message);
+				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
+			}
+		} catch (Exception e) {
+			logger.error("Error: " + e.toString());
+			message = e.getMessage();
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
+					: HttpStatus.BAD_REQUEST;
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
+		}
+
+	}
+	
+	
+	@PatchMapping(value = "/{id}/preferences", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> updatereferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
+		logger.info("Call user update Preferences API...");
+		String message;
+
+		try {
+			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
+			if (validationResult.isValid()) {
+
+				UserDTO userDTO = userService.updatePreferencesByUser(id, userRequest.getPreferences());
+				message = "Preferences are updated successfully.";
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();

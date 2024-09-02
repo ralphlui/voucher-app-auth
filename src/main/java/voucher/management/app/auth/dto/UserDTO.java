@@ -1,5 +1,7 @@
 package voucher.management.app.auth.dto;
 
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import voucher.management.app.auth.enums.RoleType;
@@ -14,7 +16,7 @@ public class UserDTO {
 	private RoleType role;
 	private boolean isActive;
 	private boolean isVerified;
-	private String[] categories;
+	private List<String> preferences;
     public UserDTO(){
     }
     

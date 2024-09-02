@@ -8,5 +8,7 @@ public interface IAPIHelperValidationStrategy<T> {
 	
 	ValidationResult validateObject(String data);
 	
-	ValidationResult validateUpdating(T data) ;
+	ValidationResult validateUpdating(String data) ;
+	
+	ValidationResult validateObjectByUserId(String userId);
 }
