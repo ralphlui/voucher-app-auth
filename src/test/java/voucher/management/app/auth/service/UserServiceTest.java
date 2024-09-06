@@ -2,8 +2,8 @@ package voucher.management.app.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +124,6 @@ public class UserServiceTest {
 	public void verifyUser() throws Exception {
 		String decodedVerificationCode = "7f03a9a9-d7a5-4742-bc85-68d52b2bee45";
 		String verificationCode = encryptionUtils.encrypt(decodedVerificationCode);
-		user.setVerified(false);
 
 		Mockito.when(encryptionUtils.decrypt(verificationCode)).thenReturn(decodedVerificationCode);
 		Mockito.when(userRepository.findByVerificationCode(decodedVerificationCode, false, true)).thenReturn(user);
@@ -139,16 +138,14 @@ public class UserServiceTest {
 	@Test
 	void updateUser() throws Exception {
 
-		user.setActive(userRequest.getActive());
-		user.setUsername(userRequest.getUsername());
-		user.setUpdatedDate(LocalDateTime.now());
+		userRequest.setUsername("Admin");
 		Mockito.when(userService.findByUserId(user.getUserId())).thenReturn(user);
 
 		Mockito.when(userRepository.save(user)).thenReturn(user);
 		Mockito.when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 
 		UserDTO updatedUser = userService.update(userRequest);
-		assertThat(updatedUser.getUsername().equals("UserAdmin")).isTrue();
+		assertThat(updatedUser.getUsername().equals("Admin")).isTrue();
 
 	}
 	
@@ -163,7 +160,7 @@ public class UserServiceTest {
     }
 	
 	@Test
-	void getAllActiveUsersByPreferences() {
+	void getAllActiveUsersByPreferences() throws Exception {
 
 		List<UserDTO> userDTOList = new ArrayList<UserDTO>();
 		Pageable pageable = PageRequest.of(0, 10);
@@ -178,12 +175,6 @@ public class UserServiceTest {
 		}
 		assertEquals(mockUsers.size(), userDTOList.size());
 		assertEquals(mockUsers.get(0).getEmail(), userDTOList.get(0).getEmail());
-		
-		
-		Map<Long, List<UserDTO>> userList = userService.findUsersByPreferences("shoes", pageable);
-		assertEquals(userList, null);
-
-
 	}
 	
 	@Test
@@ -218,7 +209,7 @@ public class UserServiceTest {
 		Mockito.when(userRepository.save(user)).thenReturn(user);
      
 	    UserDTO updateUser = userService.deletePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences());
-		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
+	    assertEquals(updateUser.getPreferences(), null);
 		
 	}
 	
@@ -230,9 +221,10 @@ public class UserServiceTest {
 		Mockito.when(userService.findByUserId(user.getUserId())).thenReturn(user);
 		Mockito.when(userRepository.save(user)).thenReturn(user);
      
-	    UserDTO updateUser = userService.updatePreferencesByUser(userRequest.getUserId(), userRequest.getPreferences());
-		assertThat(updateUser.getEmail().equals("useradmin@gmail.com")).isTrue();
-		
+	    UserDTO updateUser = userService.updatePreferencesByUser(user.getUserId(),updatedPreferenceList);	
+	    assertEquals(updateUser.getPreferences().isEmpty(), false);
+	    assertEquals(updateUser.getPreferences().size(), 1);
+	    assertNotNull(updateUser.getPreferences());
 	}
 
 }
