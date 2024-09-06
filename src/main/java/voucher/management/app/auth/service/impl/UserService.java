@@ -66,7 +66,7 @@ public class UserService implements IUserService  {
 
 		} catch (Exception ex) {
 			logger.error("findByIsActiveTrue exception... {}", ex.toString());
-			return null;
+			throw ex;
 
 		}
 	}
@@ -264,7 +264,7 @@ public class UserService implements IUserService  {
 
 		} catch (Exception ex) {
 			logger.error("findByIsActiveTrue exception... {}", ex.toString());
-			return null;
+			throw ex;
 
 		}
 	}
@@ -361,6 +361,7 @@ public class UserService implements IUserService  {
 
 			User updateUser = userRepository.save(dbUser);
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
+			logger.info("Update Preferences size "+updateUserDTO.getPreferences().size());
 			return updateUserDTO;
 
 		} catch (Exception e) {
