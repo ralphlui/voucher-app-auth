@@ -59,7 +59,7 @@ public class UserServiceTest {
 	private static UserRequest userRequest;
 	@BeforeEach
 	void setUp() {
-		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.ADMIN, true, new ArrayList<String>());
+		userRequest = new UserRequest("useradmin@gmail.com", "Pwd@123", "UserAdmin", RoleType.CUSTOMER, true, new ArrayList<String>());
 		user = new User(userRequest.getEmail(), userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole(), true);
 		userRequest.setUserId("8f6e8b84-1219-4c28-a95c-9891c11328b7");
 		user.setPreferences("food");
@@ -166,7 +166,7 @@ public class UserServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<User> mockUserPages = new PageImpl<>(mockUsers, pageable, mockUsers.size());
 
-		Mockito.when(userRepository.findByPreferences("clothing", true, true, pageable)).thenReturn(mockUserPages);
+		Mockito.when(userRepository.findByPreferences("clothing", true, true, RoleType.CUSTOMER, pageable)).thenReturn(mockUserPages);
 		Map<Long, List<UserDTO>> userPages = userService.findUsersByPreferences("clothing", pageable);
 
 		for (Map.Entry<Long, List<UserDTO>> entry : userPages.entrySet()) {

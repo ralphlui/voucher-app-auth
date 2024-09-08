@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import voucher.management.app.auth.entity.User;
+import voucher.management.app.auth.enums.RoleType;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
@@ -29,8 +30,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 	@Query("SELECT u FROM User u WHERE u.verificationCode = ?1 AND u.isVerified = ?2 AND u.isActive = ?3")
 	User findByVerificationCode(String verificationCode,boolean isVerified,boolean isActive);
 	
-	@Query("SELECT u FROM User u WHERE u.preferences LIKE %?1% AND u.isActive = ?2 AND u.isVerified = ?3")
-	Page<User> findByPreferences(String perferences, boolean isActive, boolean isVerified, Pageable pageable);
+	@Query("SELECT u FROM User u WHERE u.preferences LIKE %?1% AND u.isActive = ?2  AND u.isVerified = ?3  AND u.role = ?4")
+	Page<User> findByPreferences(String perferences, boolean isActive, boolean isVerified, RoleType role, Pageable pageable);
 	
 	
 }

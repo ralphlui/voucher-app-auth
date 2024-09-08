@@ -24,6 +24,7 @@ import voucher.management.app.auth.configuration.VoucherManagementAuthentication
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.entity.User;
+import voucher.management.app.auth.enums.RoleType;
 import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.repository.UserRepository;
 import voucher.management.app.auth.service.IUserService;
@@ -247,7 +248,7 @@ public class UserService implements IUserService  {
 	public Map<Long, List<UserDTO>> findUsersByPreferences(String preferences, Pageable pageable) {
 		Map<Long, List<UserDTO>> result = new HashMap<>();
 		try {
-			Page<User> userPages = userRepository.findByPreferences(preferences, true, true, pageable);
+			Page<User> userPages = userRepository.findByPreferences(preferences, true, true, RoleType.CUSTOMER, pageable);
 			long totalRecord = userPages.getTotalElements();
 			List<UserDTO> userDTOList = new ArrayList<>();
 			if (totalRecord > 0) {
