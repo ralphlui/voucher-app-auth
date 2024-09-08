@@ -74,6 +74,11 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 			validationResult.setValid(false);
 			return validationResult;
 		}
+		
+		ValidationResult validationObjResult = validateObjectByUserId(userId);
+		if (!validationObjResult.isValid()) {
+			return validationObjResult;
+		}
 
 		validationResult.setValid(true);
 		return validationResult;
