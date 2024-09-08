@@ -105,6 +105,18 @@ public class UserControllerTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Successfully get all active verified user.")).andDo(print());
+		
+		Map<Long, List<UserDTO>> emptyMockUserMap = new HashMap<>();
+		List<UserDTO> emptyMockUsers = new ArrayList<>();
+		emptyMockUserMap.put(0L, emptyMockUsers);
+
+		Mockito.when(userService.findActiveUsers(pageable)).thenReturn(emptyMockUserMap);
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users").param("page", "0").param("size", "10")
+				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isNotFound())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.success").value(true))
+				.andExpect(jsonPath("$.message").value("No Active User List.")).andDo(print());
+
 	}
 	
 	@Test
