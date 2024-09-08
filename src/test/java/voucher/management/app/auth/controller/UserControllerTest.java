@@ -215,6 +215,7 @@ public class UserControllerTest {
 	@Test
 	public void testUpdatedUser() throws Exception {
 		testUser.setEmail("newemail@gmail.com");
+		testUser.setVerified(true);
 		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 		
 		Mockito.when(userService.update(Mockito.any(UserRequest.class)))
