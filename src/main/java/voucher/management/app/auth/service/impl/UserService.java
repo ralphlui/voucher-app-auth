@@ -57,6 +57,7 @@ public class UserService implements IUserService  {
 			Page<User> userPages = userRepository.findActiveUserList(true, true, pageable);
 			long totalRecord = userPages.getTotalElements();
 			if (totalRecord > 0) {
+				logger.info("Active user list is found.");
 				for (User user : userPages.getContent()) {
 					UserDTO userDTO = DTOMapper.toUserDTO(user);
 					userDTOList.add(userDTO);
@@ -88,12 +89,13 @@ public class UserService implements IUserService  {
 			user.setCreatedDate(LocalDateTime.now());
 			String preferences = formatPreferencesString(userReq.getPreferences());
 			user.setPreferences(preferences);
+			logger.info("Create User...");
 			User createdUser = userRepository.save(user);
 
 			if (createdUser == null) {
 				throw new Exception("User registration is not successful");
 			}
-
+			logger.info("User registration is successful.");
 			String verificationCode = encryptionUtils.encrypt(createdUser.getVerificationCode());
 			logger.info("verification code" + verificationCode);
 			sendVerificationEmail(createdUser);
@@ -129,8 +131,10 @@ public class UserService implements IUserService  {
 		try {
 			User user = userRepository.findByEmailAndStatus(email, true, true);
 			if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+				logger.info("User login is successful.");
 				return DTOMapper.toUserDTO(user);
 			}
+			logger.error("User login is not successful.");
 			throw new UserNotFoundException("Invalid Credentials");
 		} catch (Exception e) {
 			logger.error("Error occurred while validateUserLogin, " + e.toString());
@@ -144,15 +148,19 @@ public class UserService implements IUserService  {
 		String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);
 		User user = userRepository.findByVerificationCode(decodedVerificationCode, false, true);
 		if (user == null) {
+			logger.error("User Not Found by this verification code.");
 			throw new UserNotFoundException("User Not Found by this verification code.");
 		}
 		user.setVerified(true);
 		user.setUpdatedDate(LocalDateTime.now());
 		User verifiedUser = userRepository.save(user);
 		UserDTO userDTO = DTOMapper.toUserDTO(verifiedUser);
+		
 		if (userDTO == null) {
+			logger.error("Vefriy user failed: Verfiy Id is invalid or already verified.");
 			throw new UserNotFoundException("Vefriy user failed: Verfiy Id is invalid or already verified.");
 		}
+		logger.info("User verification is successful.");
 		return userDTO;
 	}
 
@@ -181,7 +189,9 @@ public class UserService implements IUserService  {
 			dbUser.setUpdatedDate(LocalDateTime.now());
 			String preferences = formatPreferencesString(userRequest.getPreferences());
 			dbUser.setPreferences(preferences);
+			logger.info("Update User...");
 			User updateUser = userRepository.save(dbUser);
+			logger.info("User update is successfule");
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 			return updateUserDTO;
 		} catch (Exception e) {
@@ -252,13 +262,14 @@ public class UserService implements IUserService  {
 			long totalRecord = userPages.getTotalElements();
 			List<UserDTO> userDTOList = new ArrayList<>();
 			if (totalRecord > 0) {
+				logger.info("Active User list by preferences is found");
 				for (User user : userPages.getContent()) {
 					UserDTO userDTO = DTOMapper.toUserDTO(user);
 					userDTOList.add(userDTO);
 				}
 
 			} else {
-				logger.info("User not found...");
+				logger.error("User not found...");
 			}
 			result.put(totalRecord, userDTOList);
 			return result;
@@ -275,13 +286,14 @@ public class UserService implements IUserService  {
 		try {
 			User dbUser = findByUserIdAndStatus(userId, true, true);
 			if (dbUser == null) {
-
+				logger.error("Reset Password failed.");
 				throw new UserNotFoundException(
 						"Reset Password failed: Unable to find the user with this user Id :" + userId);
 			}
 
 			dbUser.setPassword(passwordEncoder.encode(password));
 			User updatedUser = userRepository.save(dbUser);
+			logger.info("Reset Password is successful.");
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updatedUser);
 			return updateUserDTO;
 
@@ -297,8 +309,10 @@ public class UserService implements IUserService  {
 		try {
 			User user = findByUserIdAndStatus(userId, true, true);
 			if (user == null) {
+				logger.error("Active user is not found.");
 				throw new UserNotFoundException("This user is not an active user");
 			}
+			logger.info("Active user is found.");
 			return DTOMapper.toUserDTO(user);
 			
 		} catch (Exception e) {
@@ -313,6 +327,7 @@ public class UserService implements IUserService  {
 		try {
 			User dbUser = findByUserId(userId);
 			if (dbUser == null) {
+			    logger.error("user by this deleted preference is not found.");
 				throw new UserNotFoundException("User not found.");
 			}
 			
@@ -334,8 +349,9 @@ public class UserService implements IUserService  {
 
 			    dbUser.setPreferences(String.join(",", updatedPreferences));
 			    dbUser.setUpdatedDate(LocalDateTime.now());
-
+			    logger.info("preference deletion ...");
 				User updateUser = userRepository.save(dbUser);
+				logger.info("preference deletion is successful");
 				UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 				return updateUserDTO;
 			
@@ -352,6 +368,7 @@ public class UserService implements IUserService  {
 		try {
 			User dbUser = findByUserId(userId);
 			if (dbUser == null) {
+				logger.error("user by this updated preference is not found.");
 				throw new UserNotFoundException("User not found.");
 			}
 
@@ -361,6 +378,7 @@ public class UserService implements IUserService  {
 			dbUser.setUpdatedDate(LocalDateTime.now());
 
 			User updateUser = userRepository.save(dbUser);
+			logger.info("preference update is successful");
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 			logger.info("Update Preferences size "+updateUserDTO.getPreferences().size());
 			return updateUserDTO;

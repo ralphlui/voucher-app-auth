@@ -55,7 +55,7 @@ public class UserController {
 
 			Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
 			Map<Long, List<UserDTO>> resultMap = userService.findActiveUsers(pageable);
-			logger.info("size" + resultMap.size());
+			logger.info("all active user list size " + resultMap.size());
 
 			Map.Entry<Long, List<UserDTO>> firstEntry = resultMap.entrySet().iterator().next();
 			long totalRecord = firstEntry.getKey();
@@ -65,6 +65,7 @@ public class UserController {
 			logger.info("userDTO List: " + userDTOList);
 
 			if (userDTOList.size() > 0) {
+				logger.info("Successfully get all active verified user.");
 				return ResponseEntity.status(HttpStatus.OK).body(
 						APIResponse.success(userDTOList, "Successfully get all active verified user.", totalRecord));
 
@@ -92,6 +93,7 @@ public class UserController {
 
 				UserDTO userDTO = userService.createUser(userRequest);
 				message = userRequest.getEmail() + " is created successfully";
+				logger.info(message);
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
@@ -114,13 +116,14 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
 			if (!validationResult.isValid()) {
-				logger.error("Login Valiation Error: " + validationResult.getMessage());
+				logger.error("Login Validation Error: " + validationResult.getMessage());
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
 			UserDTO userDTO = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
 			message = userDTO.getEmail() + " login successfully";
+			logger.info(message);
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			
 		} catch (Exception e) {
@@ -142,6 +145,7 @@ public class UserController {
 			if (!verifyid.isEmpty()) {
 				UserDTO verifiedUserDTO = userService.verifyUser(verifyid);
 				message = "User successfully verified.";
+				logger.info(message);
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(verifiedUserDTO, message));
 
 			} else {
@@ -170,6 +174,7 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
+				logger.error("Reset passwrod validation is not successful");
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
@@ -227,12 +232,14 @@ public class UserController {
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
+				logger.error("Active user validation is not successful");
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(validationResult.getMessage()));
 			}
 
 			UserDTO userDTO = userService.checkSpecificActiveUser(id);
 			message = userDTO.getEmail() + " is Active";
+			logger.info(message);
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
@@ -262,6 +269,7 @@ public class UserController {
 			logger.info("userDTO List: " + userDTOList);
 
 			if (userDTOList.size() > 0) {
+				logger.info("Successfully get all active user by preferences.");
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(APIResponse.success(userDTOList, "Successfully get all active user by preferences.", totalRecord));
 
@@ -289,6 +297,7 @@ public class UserController {
 
 				UserDTO userDTO = userService.deletePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences deleted successfully.";
+				logger.info(message);
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
@@ -317,6 +326,7 @@ public class UserController {
 
 				UserDTO userDTO = userService.updatePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences are updated successfully.";
+				logger.info(message);
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
