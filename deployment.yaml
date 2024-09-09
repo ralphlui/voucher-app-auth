@@ -65,6 +65,6 @@ spec:
     app: voucher-app-auth
   ports:
     - protocol: TCP
-      port: 8080
+      port: 8083
       targetPort: 8083
   type: NodePort
