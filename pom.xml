@@ -32,7 +32,6 @@
   		<sonar.organization>ralphlui-voucher-management-app-backend</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
-	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
