@@ -127,7 +127,7 @@ public class UserController {
 		String activityType = "Authentication-Login";
 		String apiEndPoint = "api/users/login";
 		String httpMethod = HttpMethod.GET.name();
-		String activityDesc = "User failed to login ";
+		String activityDesc = "User failed to login due to ";
 
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
@@ -136,7 +136,7 @@ public class UserController {
 				logger.error("Login Validation Error: " + validationResult.getMessage());
 				message = validationResult.getMessage();
 				User user = userService.findByEmail(userRequest.getEmail());
-				activityDesc += "message";
+				activityDesc += message;
 				auditTrailService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), user.getUserId(), user.getUsername(), activityType, activityDesc , apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(message));

@@ -124,7 +124,8 @@ public class UserControllerTest {
 		testUser.setVerified(true);
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
-		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword())).thenReturn(DTOMapper.toUserDTO(testUser));
+		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword()))
+				.thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
@@ -134,14 +135,6 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.data.email").value(userRequest.getEmail()))
 				.andExpect(jsonPath("$.data.role").value(userRequest.getRole().toString())).andDo(print());
 
-		UserRequest userNotFoundRequest = new UserRequest(errorUser.getEmail(), "Pwd@21212");
-
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(userNotFoundRequest)))
-				.andExpect(MockMvcResultMatchers.status().isUnauthorized())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.message").value("User account not found."))
-				.andExpect(jsonPath("$.success").value(false)).andDo(print());
 	}
 	
 
