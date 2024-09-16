@@ -29,7 +29,7 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 
 		User dbUser = userService.findByEmail(userRequest.getEmail());
 		if (dbUser != null) {
-			validationResult.setMessage("User already exists.");
+			validationResult.setMessage("User already exixts.");
 			validationResult.setStatus(HttpStatus.BAD_REQUEST);
 			validationResult.setValid(false);
 			return validationResult;
@@ -53,7 +53,7 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 			validationResult.setStatus(HttpStatus.UNAUTHORIZED);
 			validationResult.setValid(false);
 		} else if (!user.isVerified()) {
-			validationResult.setMessage("Please verify the account first.");
+			validationResult.setMessage("User has not been verified");
 			validationResult.setStatus(HttpStatus.UNAUTHORIZED);
 			validationResult.setValid(false);
 		} else {

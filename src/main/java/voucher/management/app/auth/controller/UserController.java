@@ -8,9 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,10 +24,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import voucher.management.app.auth.aws.service.AuditTrailService;
 import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
 import voucher.management.app.auth.dto.ValidationResult;
+import voucher.management.app.auth.entity.User;
+import voucher.management.app.auth.enums.AuditLogResponseStatus;
 import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
@@ -34,6 +39,7 @@ import voucher.management.app.auth.utility.GeneralUtility;
 import org.springframework.data.domain.Sort;
 
 @RestController
+@EnableAsync
 @RequestMapping("/api/users")
 public class UserController {
 
@@ -44,6 +50,12 @@ public class UserController {
 
 	@Autowired
 	private UserValidationStrategy userValidationStrategy;
+	
+	@Autowired
+	private AuditTrailService auditTrailService;
+	
+	String auditLogResponseSuccess = AuditLogResponseStatus.SUCCESS.toString();
+	String auditLogResponseFailure = AuditLogResponseStatus.FAILED.toString();
 	
 
 	@GetMapping(value = "", produces = "application/json")
@@ -112,21 +124,32 @@ public class UserController {
 	public ResponseEntity<APIResponse<UserDTO>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";
+		String activityType = "Authentication-Login";
+		String apiEndPoint = "api/users/login";
+		String httpMethod = HttpMethod.GET.name();
+		String activityDesc = "User failed to login ";
 
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObject(userRequest.getEmail());
 			if (!validationResult.isValid()) {
+				
 				logger.error("Login Validation Error: " + validationResult.getMessage());
+				message = validationResult.getMessage();
+				User user = userService.findByEmail(userRequest.getEmail());
+				activityDesc += "message";
+				auditTrailService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), user.getUserId(), user.getUsername(), activityType, activityDesc , apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus())
-						.body(APIResponse.error(validationResult.getMessage()));
+						.body(APIResponse.error(message));
 			}
 
 			UserDTO userDTO = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
 			message = userDTO.getEmail() + " login successfully";
 			logger.info(message);
+			auditTrailService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), message, activityDesc, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			
 		} catch (Exception e) {
+			
 			logger.error("Error: " + e.toString());
 			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR;
 			return ResponseEntity.status(htpStatuscode)
@@ -240,7 +263,7 @@ public class UserController {
 			UserDTO userDTO = userService.checkSpecificActiveUser(id);
 			message = userDTO.getEmail() + " is Active";
 			logger.info(message);
-			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+        	return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
