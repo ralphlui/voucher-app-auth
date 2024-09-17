@@ -1,6 +1,6 @@
 
 
-package voucher.management.app.auth.aws.service;
+package voucher.management.app.auth.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,12 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.transaction.Transactional;
 import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
+import voucher.management.app.auth.service.AuditLogService;
 
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AuditTrailServiceTest {
+public class AuditLogServiceTest {
 	
 	   @Mock
 	    private AmazonSQS sqs;
@@ -34,7 +35,7 @@ public class AuditTrailServiceTest {
 	    private VoucherManagementAuthenticationSecurityConfig securityConfig;
 
 	    @InjectMocks
-	    private AuditTrailService auditLogService;
+	    private AuditLogService auditLogService;
 	    
 
 	    @BeforeEach

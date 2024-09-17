@@ -1,4 +1,4 @@
-package voucher.management.app.auth.aws.service;
+package voucher.management.app.auth.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +18,9 @@ import voucher.management.app.auth.dto.AuditLogRequest;
 
 
 @Service
-public class AuditTrailService {
+public class AuditLogService {
 	
-	private static final Logger logger = LoggerFactory.getLogger(AuditTrailService.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuditLogService.class);
 	
 	
 	@Autowired

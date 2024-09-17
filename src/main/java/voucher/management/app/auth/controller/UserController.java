@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import voucher.management.app.auth.aws.service.AuditTrailService;
 import voucher.management.app.auth.dto.APIResponse;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
@@ -32,6 +31,7 @@ import voucher.management.app.auth.dto.ValidationResult;
 import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.AuditLogResponseStatus;
 import voucher.management.app.auth.exception.UserNotFoundException;
+import voucher.management.app.auth.service.AuditLogService;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
 import voucher.management.app.auth.utility.GeneralUtility;
@@ -52,7 +52,7 @@ public class UserController {
 	private UserValidationStrategy userValidationStrategy;
 	
 	@Autowired
-	private AuditTrailService auditTrailService;
+	private AuditLogService auditLogService;
 	
 	String auditLogResponseSuccess = AuditLogResponseStatus.SUCCESS.toString();
 	String auditLogResponseFailure = AuditLogResponseStatus.FAILED.toString();
@@ -137,7 +137,7 @@ public class UserController {
 				message = validationResult.getMessage();
 				User user = userService.findByEmail(userRequest.getEmail());
 				activityDesc += message;
-				auditTrailService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), user.getUserId(), user.getUsername(), activityType, activityDesc , apiEndPoint, auditLogResponseFailure, httpMethod, message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), user.getUserId(), user.getUsername(), activityType, activityDesc , apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus())
 						.body(APIResponse.error(message));
 			}
@@ -145,7 +145,7 @@ public class UserController {
 			UserDTO userDTO = userService.loginUser(userRequest.getEmail(), userRequest.getPassword());
 			message = userDTO.getEmail() + " login successfully";
 			logger.info(message);
-			auditTrailService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), message, activityDesc, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
+			auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), message, activityDesc, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
 			return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			
 		} catch (Exception e) {
