@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.transaction.Transactional;
 import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
-import voucher.management.app.auth.service.AuditLogService;
 
 @SpringBootTest
 @Transactional
