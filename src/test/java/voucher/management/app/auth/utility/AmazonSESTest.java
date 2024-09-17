@@ -4,7 +4,6 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.model.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -25,9 +24,6 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 public class AmazonSESTest {
 	
-	@Autowired
-    private AmazonSES amazonSES;
-	
     @Test
     void testSendEmail_Success() throws Exception {
         AmazonSimpleEmailService client = mock(AmazonSimpleEmailService.class);
@@ -37,7 +33,7 @@ public class AmazonSESTest {
         String subject = "Test Subject";
         String body = "<html><body>Testing...</body></html>";
 
-        boolean isSent = amazonSES.sendEmail(client, from, recipientsTo, subject, body);
+        boolean isSent = AmazonSES.sendEmail(client, from, recipientsTo, subject, body);
 
         assertTrue(isSent);
 
@@ -56,7 +52,7 @@ public class AmazonSESTest {
         AmazonSimpleEmailService client = mock(AmazonSimpleEmailService.class);
         doThrow(new AmazonSimpleEmailServiceException("Test exception")).when(client).sendEmail(any());
 
-        boolean isSent = amazonSES.sendEmail(client, "from@example.com", new ArrayList<>(), "Test Subject", "Test Body");
+        boolean isSent = AmazonSES.sendEmail(client, "from@example.com", new ArrayList<>(), "Test Subject", "Test Body");
 
         assertFalse(isSent);
     }
