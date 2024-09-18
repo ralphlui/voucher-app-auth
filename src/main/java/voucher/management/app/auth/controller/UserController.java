@@ -266,25 +266,36 @@ public class UserController {
 		logger.info("Call user active API...");
 		logger.info("User ID" + id);
 		String message = "";
+		String activityType = "Authentication-RetrieveActiveUserByUserId";
+		String apiEndPoint = "api/users/{id}/active";
+		String httpMethod = HttpMethod.GET.name();
+		String activityDesc = "Retrieving active user by id failed due to ";
 
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
 			if (!validationResult.isValid()) {
 				logger.error("Active user validation is not successful");
+				message = validationResult.getMessage();
+				activityDesc = activityDesc.concat(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), validationResult.getUserId(), validationResult.getUserName(), activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus())
-						.body(APIResponse.error(validationResult.getMessage()));
+						.body(APIResponse.error(message));
 			}
 
 			UserDTO userDTO = userService.checkSpecificActiveUser(id);
 			message = userDTO.getEmail() + " is Active";
 			logger.info(message);
+			auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
         	return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
+			message = e.getMessage();
+			activityDesc = activityDesc.concat(message);
 			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.BAD_REQUEST
 					: HttpStatus.INTERNAL_SERVER_ERROR;
-			return ResponseEntity.status(htpStatuscode).body(APIResponse.error("Error: " + e.getMessage()));
+			auditLogService.sendAuditLogToSqs(Integer.toString(htpStatuscode.value()), auditLogInvalidUserId, auditLogInvalidUserName, activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);
+			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
 		}
 	}
 
@@ -328,6 +339,10 @@ public class UserController {
 	public ResponseEntity<APIResponse<UserDTO>> deletePreferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user Delete Preferences API...");
 		String message;
+		String activityType = "Authentication-DeleteUserPreferenceByUserId";
+		String apiEndPoint = "api/users/{id}/preferences";
+		String httpMethod = HttpMethod.DELETE.name();
+		String activityDesc = "Delete user preference by preference is failed due to ";
 
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
@@ -336,17 +351,22 @@ public class UserController {
 				UserDTO userDTO = userService.deletePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences deleted successfully.";
 				logger.info(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
+				activityDesc = activityDesc.concat(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), validationResult.getUserId(), validationResult.getUserName(), activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
 			message = e.getMessage();
+			activityDesc = activityDesc.concat(message);
 			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
 					: HttpStatus.BAD_REQUEST;
+			auditLogService.sendAuditLogToSqs(Integer.toString(htpStatuscode.value()), auditLogInvalidUserId, auditLogInvalidUserName, activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);
 			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
 		}
 
@@ -357,6 +377,10 @@ public class UserController {
 	public ResponseEntity<APIResponse<UserDTO>> updatereferenceByUser(@PathVariable("id") String id, @RequestBody UserRequest userRequest) {
 		logger.info("Call user update Preferences API...");
 		String message;
+		String activityType = "Authentication-UpdateUserPreferenceByUserId";
+		String apiEndPoint = "api/users/{id}/preferences";
+		String httpMethod = HttpMethod.PATCH.name();
+		String activityDesc = "Update user preference by preference is failed due to ";
 
 		try {
 			ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(id);
@@ -365,17 +389,22 @@ public class UserController {
 				UserDTO userDTO = userService.updatePreferencesByUser(id, userRequest.getPreferences());
 				message = "Preferences are updated successfully.";
 				logger.info(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
 				return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
 			} else {
 				message = validationResult.getMessage();
 				logger.error(message);
+				activityDesc = activityDesc.concat(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(validationResult.getStatus().value()), validationResult.getUserId(), validationResult.getUserName(), activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);
 				return ResponseEntity.status(validationResult.getStatus()).body(APIResponse.error(message));
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.toString());
 			message = e.getMessage();
+			activityDesc = activityDesc.concat(message);
 			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
 					: HttpStatus.BAD_REQUEST;
+			auditLogService.sendAuditLogToSqs(Integer.toString(htpStatuscode.value()), auditLogInvalidUserId, auditLogInvalidUserName, activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);	
 			return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
 		}
 
