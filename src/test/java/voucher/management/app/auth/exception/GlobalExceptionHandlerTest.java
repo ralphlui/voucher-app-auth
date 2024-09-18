@@ -36,6 +36,7 @@ public class GlobalExceptionHandlerTest {
     }
 	
 	
+	@SuppressWarnings("rawtypes")
 	@Test
     void testHandleObjectNotFoundException() {
         Exception ex = new Exception("Test exception message");
@@ -47,6 +48,7 @@ public class GlobalExceptionHandlerTest {
         assertEquals("Failed to get data. Test exception message", responseEntity.getBody().getMessage());
     }
 	
+	@SuppressWarnings("rawtypes")
 	@Test
     void testIllegalArgumentException() {
         IllegalArgumentException ex = new IllegalArgumentException("Test illegal argument message");
