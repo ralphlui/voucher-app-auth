@@ -11,6 +11,8 @@ public class ValidationResult {
 	private boolean isValid;
 	private String message;
 	private HttpStatus status;
+	private String userId;
+	private String userName;
 
 	public ValidationResult() {
 
