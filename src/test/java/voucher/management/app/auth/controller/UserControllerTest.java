@@ -99,10 +99,14 @@ public class UserControllerTest {
 		Map<Long, List<UserDTO>> mockUserMap = new HashMap<>();
 		mockUserMap.put(0L, mockUsers);
 
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 		Mockito.when(userService.findActiveUsers(pageable)).thenReturn(mockUserMap);
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users").param("page", "0").param("size", "10")
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users")
+				.param("page", "0").param("size", "10")
+				.header("X-User-Id", testUser.getUserId())
+				.contentType(MediaType.APPLICATION_JSON))
+		        .andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Successfully get all active verified user.")).andDo(print());
@@ -112,7 +116,9 @@ public class UserControllerTest {
 		emptyMockUserMap.put(0L, emptyMockUsers);
 
 		Mockito.when(userService.findActiveUsers(pageable)).thenReturn(emptyMockUserMap);
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users").param("page", "0").param("size", "10")
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users")
+				.param("page", "0").param("size", "10")
+				.header("X-User-Id", testUser.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isNotFound())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -123,12 +129,14 @@ public class UserControllerTest {
 	@Test
 	public void testUserLogin() throws Exception {
 		testUser.setVerified(true);
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 		Mockito.when(userService.findByEmail(userRequest.getEmail())).thenReturn(testUser);
 
 		Mockito.when(userService.loginUser(userRequest.getEmail(), userRequest.getPassword()))
 				.thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", testUser.getUserId())
 				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message").value(userRequest.getEmail() + " login successfully"))
@@ -139,8 +147,9 @@ public class UserControllerTest {
 		UserRequest userNotFoundRequest = new UserRequest(errorUser.getEmail(), "Pwd@21212");
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/login").contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", "")
 				.content(objectMapper.writeValueAsString(userNotFoundRequest)))
-				.andExpect(MockMvcResultMatchers.status().isUnauthorized())
+				.andExpect(MockMvcResultMatchers.status().isNotFound())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message").value("User account not found."))
 				.andExpect(jsonPath("$.success").value(false)).andDo(print());
@@ -160,8 +169,9 @@ public class UserControllerTest {
 
 		Mockito.when(userService.verifyUser(verificationCode)).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/verify/{verifyid}", verificationCode)
-				).andExpect(MockMvcResultMatchers.status().isOk())
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/verify/{verifyid}", verificationCode)	
+				.header("X-User-Id", testUser.getUserId()))
+		        .andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.data.verified").value(true))
@@ -207,8 +217,11 @@ public class UserControllerTest {
 		Mockito.when(userService.resetPassword(userRequest.getUserId(), userRequest.getPassword()))
 				.thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/resetPassword", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/resetPassword", testUser.getUserId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", testUser.getUserId())
+				.content(objectMapper.writeValueAsString(userRequest)))
+		         .andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Reset Password is completed."))
@@ -224,7 +237,9 @@ public class UserControllerTest {
 		Mockito.when(userService.update(Mockito.any(UserRequest.class))).thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/{id}", testUser.getUserId())
-				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userRequest)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", testUser.getUserId())
+				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message").value("User updated successfully."))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
@@ -236,7 +251,9 @@ public class UserControllerTest {
 		errorUserRequest.setUserId(errorUser.getUserId());
 		Mockito.when(userService.findByUserId(errorUser.getUserId())).thenReturn(errorUser);
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/{id}", errorUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.put("/api/users/{id}", errorUser.getUserId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", "")
 				.content(objectMapper.writeValueAsString(errorUserRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false)).andDo(print());
@@ -249,7 +266,9 @@ public class UserControllerTest {
 		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
 		Mockito.when(userService.checkSpecificActiveUser(testUser.getUserId())).thenReturn(DTOMapper.toUserDTO(testUser));
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", testUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", testUser.getUserId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", testUser.getUserId())
 				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
@@ -260,7 +279,9 @@ public class UserControllerTest {
 
 		errorUser.setVerified(false);
 		Mockito.when(userService.findByUserId(errorUser.getUserId())).thenReturn(errorUser);
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", errorUser.getUserId()).contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}/active", errorUser.getUserId())
+				.header("X-User-Id", "")
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(errorUser)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false)).andDo(print());
@@ -276,13 +297,17 @@ public class UserControllerTest {
 		Mockito.when(userService.findUsersByPreferences("clothing", pageable)).thenReturn(mockUserMap);
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/preferences/{preference}", "clothing").param("page", "0")
-				.param("size", "10").contentType(MediaType.APPLICATION_JSON))
+				.param("size", "10")
+				.header("X-User-Id", userRequest.getUserId())
+				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(MockMvcResultMatchers.status().isOk()).andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Successfully get all active user by preferences."))
 				.andDo(print());
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/preferences/{preference}", "shoes").param("page", "0")
-				.param("size", "10").contentType(MediaType.APPLICATION_JSON))
+				.param("size", "10")
+				.header("X-User-Id", userRequest.getUserId())
+				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false)).andDo(print());
 
 	}
@@ -303,6 +328,7 @@ public class UserControllerTest {
 		
 		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/{id}/preferences", userRequest.getUserId())
 				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", userRequest.getUserId())
 				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
@@ -313,7 +339,9 @@ public class UserControllerTest {
 		UserRequest errorUserRequest = new UserRequest();
 		errorUserRequest.setUserId("0");
 		mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/{id}/preferences", errorUserRequest.getUserId())
-				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(errorUserRequest)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", "")
+				.content(objectMapper.writeValueAsString(errorUserRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false))
 				.andDo(print());
@@ -332,7 +360,9 @@ public class UserControllerTest {
 				.thenReturn(DTOMapper.toUserDTO(testUser));
 
 		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", userRequest.getUserId())
-				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userRequest)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", userRequest.getUserId())
+				.content(objectMapper.writeValueAsString(userRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Preferences are updated successfully."))
@@ -341,7 +371,9 @@ public class UserControllerTest {
 		UserRequest errorUserRequest = new UserRequest();
 		errorUserRequest.setUserId("0");
 		mockMvc.perform(MockMvcRequestBuilders.patch("/api/users/{id}/preferences", errorUserRequest.getUserId())
-				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(errorUserRequest)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", "")
+				.content(objectMapper.writeValueAsString(errorUserRequest)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(false))
 				.andDo(print());
