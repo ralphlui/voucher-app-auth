@@ -250,7 +250,7 @@ public class UserController {
 		String activityDesc = "Update User failed due to ";
 
 		try {
-			String userId = userID.isEmpty() ? id : userID;
+			String userId = id.isEmpty() ? userID : id;
 			ValidationResult validationResult = userValidationStrategy.validateUpdating(userId);
 			auditLogUserId = validationResult.getUserId();
 			auditLogUserName = validationResult.getUserName();
@@ -422,7 +422,7 @@ public class UserController {
 	
 	private ValidationResult validateObjectByUseId(String userID, String id) {
 		
-		String userId = userID.isEmpty() ? id : userID;
+		String userId = id.isEmpty() ? userID : id;
 		ValidationResult validationResult = userValidationStrategy.validateObjectByUserId(userId);
 		auditLogUserId = validationResult.getUserId();
 		auditLogUserName = validationResult.getUserName();
@@ -475,13 +475,15 @@ public class UserController {
 	}
 	
 	private void getUserByUserID(String userID) {
+		auditLogUserId = userID;
+		
 		if (!userID.isEmpty()) {
 			User user = userService.findByUserId(userID);
 			if (user != null) {
 				auditLogUserId = user.getUserId();
 				auditLogUserName = user.getUsername();
 			}
-		}
+		} 
 	}
 
 }
