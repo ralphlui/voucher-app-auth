@@ -148,8 +148,8 @@ public class UserService implements IUserService  {
 		String decodedVerificationCode = encryptionUtils.decrypt(verificationCode);
 		User user = userRepository.findByVerificationCode(decodedVerificationCode, false, true);
 		if (user == null) {
-			logger.error("User Not Found by this verification code.");
-			throw new UserNotFoundException("User Not Found by this verification code.");
+			logger.error("Vefriy user failed: Verfiy Id is invalid or already verified.");
+			throw new UserNotFoundException("Vefriy user failed: Verfiy Id is invalid or already verified.");
 		}
 		user.setVerified(true);
 		user.setUpdatedDate(LocalDateTime.now());
