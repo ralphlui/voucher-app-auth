@@ -1,4 +1,4 @@
-package voucher.management.app.auth.service;
+package voucher.management.app.auth.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
 import voucher.management.app.auth.dto.AuditLogRequest;
-
+import voucher.management.app.auth.service.IAuditService;
 
 @Service
-public class AuditLogService {
+public class AuditLogService implements IAuditService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AuditLogService.class);
 	
@@ -26,7 +26,8 @@ public class AuditLogService {
 	@Autowired
 	private VoucherManagementAuthenticationSecurityConfig securityConfig;
 
-    @Async
+	@Async
+    @Override
 	public void sendAuditLogToSqs(String statusCode, String userId, String username, String activityType, String activityDescription,
 			String requestActionEndpoint, String responseStatus, String requestType, String remarks) {
 		try {
@@ -45,7 +46,7 @@ public class AuditLogService {
 		    
 		} catch (Exception e) {
 		    // Generic exception handling for any other unforeseen errors
-		    logger.error("Exception: Unexpected error occurred while sending audit logs to SQS", e.toString());
+		    logger.error("Exception: Unexpected error occurred while sending audit logs to SQS " + e.toString());
 		}
 	}
 	

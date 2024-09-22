@@ -12,7 +12,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,7 +32,7 @@ import voucher.management.app.auth.entity.User;
 import voucher.management.app.auth.enums.AuditLogInvalidUser;
 import voucher.management.app.auth.enums.AuditLogResponseStatus;
 import voucher.management.app.auth.exception.UserNotFoundException;
-import voucher.management.app.auth.service.AuditLogService;
+import voucher.management.app.auth.service.impl.AuditLogService;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
 import voucher.management.app.auth.utility.GeneralUtility;
@@ -41,7 +40,6 @@ import voucher.management.app.auth.utility.GeneralUtility;
 import org.springframework.data.domain.Sort;
 
 @RestController
-@EnableAsync
 @RequestMapping("/api/users")
 public class UserController {
 
@@ -67,7 +65,7 @@ public class UserController {
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API with page={}, size={}", page, size);
 		String message = "";
-		String activityType = "Authentication-Login";
+		String activityType = "Authentication-RetrieveAllActiveUsers";
 		String apiEndPoint = "api/users";
 		String httpMethod = HttpMethod.GET.name();
 		String activityDesc = "Retreving active user list is failed due to ";
@@ -110,7 +108,7 @@ public class UserController {
 	public ResponseEntity<APIResponse<UserDTO>> createUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user create API...");
 		String message;
-		String activityType = "Authentication-Login";
+		String activityType = "Authentication-CreateUser";
 		String apiEndPoint = "api/users";
 		String httpMethod = HttpMethod.POST.name();
 		String activityDesc = "User registration is failed due to ";
@@ -139,7 +137,7 @@ public class UserController {
 	public ResponseEntity<APIResponse<UserDTO>> loginUser(@RequestBody UserRequest userRequest) {
 		logger.info("Call user login API...");
 		String message = "";
-		String activityType = "Authentication-Login";
+		String activityType = "Authentication-LoginUser";
 		String apiEndPoint = "api/users/login";
 		String httpMethod = HttpMethod.POST.name();
 		String activityDesc = "User failed to login due to ";
@@ -319,7 +317,7 @@ public class UserController {
 			@RequestParam(defaultValue = "500") int size) {
 		logger.info("Call user getAll API By Preferences with page={}, size={}", page, size);
 		
-		String activityType = "Authentication-Login";
+		String activityType = "Authentication-RetrieveActiveUserListByPreference";
 		String apiEndPoint = String.format("api/users/preferences/%s", name);
 		String httpMethod = HttpMethod.GET.name();
 		String activityDesc = "Retreving active user list by preference name is failed due to ";
