@@ -378,4 +378,17 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.success").value(false))
 				.andDo(print());
 	}
+	
+	
+	@Test
+	public void testUserLogout() throws Exception {
+		Mockito.when(userService.findByUserId(testUser.getUserId())).thenReturn(testUser);
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/users/logout").contentType(MediaType.APPLICATION_JSON)
+				.header("X-User-Id", testUser.getUserId())
+				.content(objectMapper.writeValueAsString(userRequest))).andExpect(MockMvcResultMatchers.status().isOk())
+		        .andExpect(jsonPath("$.success").value(true))
+			    .andDo(print());
+
+	}
 }

@@ -35,6 +35,7 @@ import voucher.management.app.auth.exception.UserNotFoundException;
 import voucher.management.app.auth.service.impl.AuditLogService;
 import voucher.management.app.auth.service.impl.UserService;
 import voucher.management.app.auth.strategy.impl.UserValidationStrategy;
+import voucher.management.app.auth.utility.DTOMapper;
 import voucher.management.app.auth.utility.GeneralUtility;
 
 import org.springframework.data.domain.Sort;
@@ -419,6 +420,40 @@ public class UserController {
 		}
 
 	}
+	
+	
+	@PostMapping(value = "/logout", produces = "application/json")
+	public ResponseEntity<APIResponse<UserDTO>> lgoutUser(@RequestHeader("X-User-Id") String userID) {
+		logger.info("Call user update Preferences API...");
+		String message;
+		String activityType = "Authentication-Logout";
+		String apiEndPoint = "/api/users/logout";
+		String httpMethod = HttpMethod.POST.name();
+		String activityDesc = "Logging out user is failed due to ";
+
+		try {
+			User user = userService.findByUserId(userID);
+			if (user != null) {
+				message = "User logout successfully";
+				return handleResponseAndsendAuditLogForSuccessCase(DTOMapper.toUserDTO(user),
+						activityType, message, apiEndPoint, httpMethod);
+			} else {
+				message = "User not found";
+				logger.error(message);
+				auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.NOT_FOUND.value()), userID, auditLogUserName, activityType, activityDesc.concat(message), apiEndPoint, auditLogResponseFailure, httpMethod, message);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+				
+
+			}
+		} catch (Exception e) {
+		   return handleResponseAndsendAuditLogForExceptionCase(e,
+				   HttpStatus.INTERNAL_SERVER_ERROR, activityType, activityDesc, apiEndPoint, httpMethod);
+		}
+
+	}
+	
+	
+
 	
 	private ValidationResult validateObjectByUseId(String userID, String id) {
 		
