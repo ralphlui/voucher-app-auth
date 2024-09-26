@@ -26,10 +26,9 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 @Configuration
 @EnableWebSecurity
 public class VoucherManagementAuthenticationSecurityConfig {
-    private static final String[] SECURED_URLs = { "/api/**" };
-    
-    
-    @Value("${aws.region}")
+	private static final String[] SECURED_URLs = { "/api/**" };
+
+	@Value("${aws.region}")
 	private String awsRegion;
 
 	@Value("${aws.accesskey}")
@@ -37,30 +36,35 @@ public class VoucherManagementAuthenticationSecurityConfig {
 
 	@Value("${aws.secretkey}")
 	private String awsSecretKey;
-	
+
 	@Value("${aws.ses.from}")
 	private String emailFrom;
-	
+
+	@Value("${aws.sqs.url}")
+	private String sqsURL;
+
 	@Value("${frontend.url}")
 	private String frontEndUrl;
 
-	
 	@Bean
 	public String getEmailFrom() {
 		return emailFrom;
 	}
-	
+
 	@Bean
 	public String getFrontEndUrl() {
 		return frontEndUrl;
 	}
 
-    
+	@Bean
+	public String getSQSUrl() {
+		return sqsURL;
+	}
+
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -79,8 +83,7 @@ public class VoucherManagementAuthenticationSecurityConfig {
 				.csrf(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(
 						auth -> auth.requestMatchers(SECURED_URLs).permitAll().anyRequest().authenticated())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.build();
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).build();
 
 	}
 
@@ -88,7 +91,7 @@ public class VoucherManagementAuthenticationSecurityConfig {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
 	}
-	
+
 	@Bean
 	public AmazonSimpleEmailService sesClient() {
 		AWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
