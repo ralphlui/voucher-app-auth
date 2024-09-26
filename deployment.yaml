@@ -54,6 +54,11 @@ spec:
                 configMapKeyRef:
                   name: my-configmap
                   key: FRONTEND_URL
+            - name: AWS_SQS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: my-configmap
+                  key: AUDIT_SQS_URL
 
 ---
 apiVersion: v1
