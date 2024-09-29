@@ -234,7 +234,7 @@ public class UserService implements IUserService  {
 			String verificationCode = encryptionUtils.encrypt(user.getVerificationCode());
 			logger.info(" Verification Code "+ verificationCode);
 
-			String verifyURL = clientURL + "/components/register/verify/" + verificationCode.trim();
+			String verifyURL = clientURL + "/verification/" + verificationCode.trim();
 			logger.info("verifyURL... {}", verifyURL);
 
 			String subject = "Please verify your registration";
