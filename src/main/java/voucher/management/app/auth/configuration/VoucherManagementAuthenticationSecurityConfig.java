@@ -16,6 +16,8 @@ import org.springframework.security.web.header.writers.HstsHeaderWriter;
 import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -90,6 +92,17 @@ public class VoucherManagementAuthenticationSecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
+	}
+	
+	@Bean
+	public WebMvcConfigurer corsConfigurer() {
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/**").allowedOrigins("*").allowedMethods("GET", "POST", "PUT", "PATCH")
+						.allowedHeaders("*");
+			}
+		};
 	}
 
 	@Bean
