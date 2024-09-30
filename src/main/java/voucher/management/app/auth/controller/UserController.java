@@ -496,7 +496,7 @@ public class UserController {
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleEmptyResponseListAndsendAuditLogForSuccessCase(List<UserDTO> userDTOList, String activityType, String message, String apiEndPoint, String httpMethod, String userId, String userName, long totalRecord) {
 		logger.info(message);
-		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.NOT_FOUND.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
+		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.noList(userDTOList, message));
 	}
 	
