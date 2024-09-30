@@ -233,7 +233,7 @@ public class UserController {
 					activityType, message, apiEndPoint, httpMethod);
 
 		} catch (Exception e) {
-			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR;
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
 			return handleResponseAndsendAuditLogForExceptionCase(e,
 					htpStatuscode, activityType, activityDesc, apiEndPoint, httpMethod);
 		}
@@ -269,7 +269,7 @@ public class UserController {
 						apiEndPoint, httpMethod);
 			}
 		} catch (Exception e) {
-			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.UNAUTHORIZED
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
 					: HttpStatus.INTERNAL_SERVER_ERROR;
 			return handleResponseAndsendAuditLogForExceptionCase(e, htpStatuscode, activityType, activityDesc,
 					apiEndPoint, httpMethod);
@@ -305,7 +305,7 @@ public class UserController {
 			
 
 		} catch (Exception e) {
-			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.BAD_REQUEST
+			HttpStatusCode htpStatuscode = e instanceof UserNotFoundException ? HttpStatus.NOT_FOUND
 					: HttpStatus.INTERNAL_SERVER_ERROR;
 			return handleResponseAndsendAuditLogForExceptionCase(e,
 					htpStatuscode, activityType, activityDesc, apiEndPoint, httpMethod);
@@ -338,11 +338,11 @@ public class UserController {
 			logger.info("userDTO List: " + userDTOList);
 
 			if (userDTOList.size() > 0) {
-			    message = "Successfully get all active user by preferences.";
+			    message = "Successfully get all active users by this preference.";
 				return handleResponseListAndsendAuditLogForSuccessCase(userDTOList,
 						activityType, message, apiEndPoint, httpMethod, auditLogUserId, auditLogUserName, totalRecord);
 			} else {
-			    message = "No user list by this preferences.";
+			    message = "No user list by this preference.";
 			    return handleEmptyResponseListAndsendAuditLogForSuccessCase(userDTOList,
 						activityType, message, apiEndPoint, httpMethod, auditLogUserId, auditLogUserName, totalRecord);
 			}
@@ -370,7 +370,7 @@ public class UserController {
 
 				UserDTO userDTO = userService.deletePreferencesByUser(validationResult.getUserId(),
 						userRequest.getPreferences());
-				message = "Preferences deleted successfully.";
+				message = "Preferences are deleted successfully.";
 				return handleResponseAndsendAuditLogForSuccessCase(userDTO,
 						activityType, message, apiEndPoint, httpMethod);
 			} else {
@@ -497,7 +497,7 @@ public class UserController {
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleEmptyResponseListAndsendAuditLogForSuccessCase(List<UserDTO> userDTOList, String activityType, String message, String apiEndPoint, String httpMethod, String userId, String userName, long totalRecord) {
 		logger.info(message);
 		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.noList(userDTOList, message));
+		return ResponseEntity.status(HttpStatus.OK).body(APIResponse.noList(userDTOList, message));
 	}
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleResponseListAndsendAuditLogForExceptionCase(Exception e, String activityType, String activityDesc, String apiEndPoint, String httpMethod, String userId, String userName) {

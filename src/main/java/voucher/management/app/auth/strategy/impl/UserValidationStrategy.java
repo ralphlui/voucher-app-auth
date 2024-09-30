@@ -132,7 +132,7 @@ public class UserValidationStrategy implements IAPIHelperValidationStrategy<User
 
 		ValidationResult validationResult = new ValidationResult();
 		validationResult.setMessage("User account is deleted.");
-		validationResult.setStatus(HttpStatus.UNAUTHORIZED);
+		validationResult.setStatus(HttpStatus.FORBIDDEN);
 		validationResult.setValid(false);
 		validationResult.setUserName(userName);
 		validationResult.setUserId(userId);

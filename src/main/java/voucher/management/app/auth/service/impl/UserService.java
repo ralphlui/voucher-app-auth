@@ -191,7 +191,7 @@ public class UserService implements IUserService  {
 			dbUser.setPreferences(preferences);
 			logger.info("Update User...");
 			User updateUser = userRepository.save(dbUser);
-			logger.info("User update is successfule");
+			logger.info("User update is successful");
 			UserDTO updateUserDTO = DTOMapper.toUserDTO(updateUser);
 			return updateUserDTO;
 		} catch (Exception e) {
