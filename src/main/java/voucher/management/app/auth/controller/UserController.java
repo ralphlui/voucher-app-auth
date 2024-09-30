@@ -483,21 +483,24 @@ public class UserController {
 	
 	private ResponseEntity<APIResponse<UserDTO>> handleResponseAndsendAuditLogForSuccessCase(UserDTO userDTO, String activityType, String message, String apiEndPoint, String httpMethod) {
 		logger.info(message);
-		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userDTO.getUserID(), userDTO.getUsername(), activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
-		return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userDTO, message));
+		HttpStatus httpStatus = HttpStatus.OK;
+		auditLogService.sendAuditLogToSqs(Integer.toString(httpStatus.value()), userDTO.getUserID(), userDTO.getUsername(), activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
+		return ResponseEntity.status(httpStatus).body(APIResponse.success(userDTO, message));
 	}
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleResponseListAndsendAuditLogForSuccessCase(List<UserDTO> userDTOList, String activityType, String message, String apiEndPoint, String httpMethod, String userId, String userName, long totalRecord) {
 		logger.info(message);
-		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
-		return ResponseEntity.status(HttpStatus.OK).body(
+		HttpStatus httpStatus = HttpStatus.OK;
+		auditLogService.sendAuditLogToSqs(Integer.toString(httpStatus.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
+		return ResponseEntity.status(httpStatus).body(
 				APIResponse.success(userDTOList, message, totalRecord));
 	}
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleEmptyResponseListAndsendAuditLogForSuccessCase(List<UserDTO> userDTOList, String activityType, String message, String apiEndPoint, String httpMethod, String userId, String userName, long totalRecord) {
 		logger.info(message);
-		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.OK.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
-		return ResponseEntity.status(HttpStatus.OK).body(APIResponse.noList(userDTOList, message));
+		HttpStatus httpStatus = HttpStatus.OK;
+		auditLogService.sendAuditLogToSqs(Integer.toString(httpStatus.value()), userId, userName, activityType, message, apiEndPoint, auditLogResponseSuccess, httpMethod, "");
+		return ResponseEntity.status(httpStatus).body(APIResponse.noList(userDTOList, message));
 	}
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleResponseListAndsendAuditLogForExceptionCase(Exception e, String activityType, String activityDesc, String apiEndPoint, String httpMethod, String userId, String userName) {
