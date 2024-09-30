@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,7 @@ public class AuditLogService implements IAuditService {
 		    String auditLogRequest = createLogEntryRequest(statusCode, userId, username, activityType, activityDescription,
 		        requestActionEndpoint, responseStatus, requestType, remarks);
 		    
-		    AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
+		    AmazonSQS sqs = AmazonSQSAsyncClientBuilder.defaultClient();
 		    String queueUrl = securityConfig.getSQSUrl();
 
 		    SendMessageRequest sendMessageRequest = new SendMessageRequest()
