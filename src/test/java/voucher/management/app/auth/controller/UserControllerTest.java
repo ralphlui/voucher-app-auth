@@ -119,7 +119,7 @@ public class UserControllerTest {
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users")
 				.param("page", "0").param("size", "10")
 				.header("X-User-Id", testUser.getUserId())
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isNotFound())
+				.contentType(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("No Active User List.")).andDo(print());
@@ -301,7 +301,7 @@ public class UserControllerTest {
 				.header("X-User-Id", userRequest.getUserId())
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(MockMvcResultMatchers.status().isOk()).andExpect(jsonPath("$.success").value(true))
-				.andExpect(jsonPath("$.message").value("Successfully get all active user by preferences."))
+				.andExpect(jsonPath("$.message").value("Successfully get all active users by this preference."))
 				.andDo(print());
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/users/preferences/{preference}", "shoes").param("page", "0")
@@ -332,7 +332,7 @@ public class UserControllerTest {
 				.content(objectMapper.writeValueAsString(userRequest)))
 		        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.success").value(true))
-				.andExpect(jsonPath("$.message").value("Preferences deleted successfully."))
+				.andExpect(jsonPath("$.message").value("Preferences are deleted successfully."))
 				.andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
 			    .andDo(print());
 		
