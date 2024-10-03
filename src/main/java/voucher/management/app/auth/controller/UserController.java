@@ -59,6 +59,7 @@ public class UserController {
 	private String auditLogResponseFailure = AuditLogResponseStatus.FAILED.toString();
 	private String auditLogUserId = AuditLogInvalidUser.InvalidUserID.toString();
 	private String auditLogUserName = AuditLogInvalidUser.InvalidUserName.toString();
+	private String genericErrorMessage = "An error occurred while processing your request. Please try again later.";
 	
 
 	@GetMapping(value = "", produces = "application/json")
@@ -478,7 +479,7 @@ public class UserController {
 		logger.error("Error: " + message);
 		activityDesc = activityDesc.concat(message);
 		auditLogService.sendAuditLogToSqs(Integer.toString(htpStatuscode.value()), auditLogUserId, auditLogUserName, activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);	
-		return ResponseEntity.status(htpStatuscode).body(APIResponse.error(message));
+		return ResponseEntity.status(htpStatuscode).body(APIResponse.error(genericErrorMessage));
 	}
 	
 	private ResponseEntity<APIResponse<UserDTO>> handleResponseAndsendAuditLogForSuccessCase(UserDTO userDTO, String activityType, String message, String apiEndPoint, String httpMethod) {
@@ -509,7 +510,7 @@ public class UserController {
 		activityDesc = activityDesc.concat(message);
 		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.NOT_FOUND.value()), userId, userName, activityType, activityDesc, apiEndPoint, auditLogResponseSuccess, httpMethod, message);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(APIResponse.error("Error: " + e.getMessage()));
+				.body(APIResponse.error(genericErrorMessage));
 	}
 	
 	private void getUserByUserID(String userID) {
