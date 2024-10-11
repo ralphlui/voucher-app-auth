@@ -14,7 +14,7 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
+import voucher.management.app.auth.configuration.AWSConfig;
 import voucher.management.app.auth.dto.AuditLogRequest;
 import voucher.management.app.auth.service.IAuditService;
 
@@ -25,7 +25,7 @@ public class AuditLogService implements IAuditService {
 	
 	
 	@Autowired
-	private VoucherManagementAuthenticationSecurityConfig securityConfig;
+	private AWSConfig awsConfig;
 	
 	@Autowired
 	private AmazonSQS amazonSQS;
@@ -39,7 +39,7 @@ public class AuditLogService implements IAuditService {
 		    String auditLogRequest = createLogEntryRequest(statusCode, userId, username, activityType, activityDescription,
 		        requestActionEndpoint, responseStatus, requestType, remarks);
 		    
-		    String queueUrl = securityConfig.getSQSUrl();
+		    String queueUrl = awsConfig.getSQSUrl();
 
 		    SendMessageRequest sendMessageRequest = new SendMessageRequest()
 		            .withQueueUrl(queueUrl)
