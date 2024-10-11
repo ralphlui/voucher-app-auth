@@ -26,6 +26,8 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 
 @Configuration
 @EnableWebSecurity
@@ -71,6 +73,12 @@ public class VoucherManagementAuthenticationSecurityConfig {
 	}
 	
 	private static final String[] SECURED_URLS = { "/api/**" };
+	
+	@Bean
+	public AWSCredentials awsCredentials() {
+		return new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+	}
+	
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -113,5 +121,13 @@ public class VoucherManagementAuthenticationSecurityConfig {
 				.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).withRegion(awsRegion).build();
 		return sesClient;
 	}
+	
+	@Bean
+    public AmazonSQS amazonSQSClient(AWSCredentials awsCredentials) {
+        return AmazonSQSClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                .withRegion(awsRegion)
+                .build();
+    }
 
 }

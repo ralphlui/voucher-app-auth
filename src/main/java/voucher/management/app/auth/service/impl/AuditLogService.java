@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +26,10 @@ public class AuditLogService implements IAuditService {
 	
 	@Autowired
 	private VoucherManagementAuthenticationSecurityConfig securityConfig;
+	
+	@Autowired
+	private AmazonSQS amazonSQS;
+
 
 	@Async
     @Override
@@ -36,14 +39,13 @@ public class AuditLogService implements IAuditService {
 		    String auditLogRequest = createLogEntryRequest(statusCode, userId, username, activityType, activityDescription,
 		        requestActionEndpoint, responseStatus, requestType, remarks);
 		    
-		    AmazonSQS sqs = AmazonSQSAsyncClientBuilder.defaultClient();
 		    String queueUrl = securityConfig.getSQSUrl();
 
 		    SendMessageRequest sendMessageRequest = new SendMessageRequest()
 		            .withQueueUrl(queueUrl)
 		            .withMessageBody(auditLogRequest);
 
-		    SendMessageResult sendMessageResult = sqs.sendMessage(sendMessageRequest);
+		    SendMessageResult sendMessageResult = amazonSQS.sendMessage(sendMessageRequest);
 		    logger.info("Message response in SQS: " + sendMessageResult.getMessageId());
 		    
 		} catch (Exception e) {
