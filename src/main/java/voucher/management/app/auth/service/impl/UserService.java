@@ -337,7 +337,7 @@ public class UserService implements IUserService  {
 			
 			 String existingPreferencesStr = dbUser.getPreferences();
 			    if (existingPreferencesStr == null || existingPreferencesStr.isEmpty()) {
-			        throw new Exception("No existing user preferences to delete.");
+			        throw new UserNotFoundException("No existing user preferences to delete.");
 			    }
 			    
 			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
@@ -348,7 +348,7 @@ public class UserService implements IUserService  {
 			    updatedPreferences.removeAll(deletedPreferences);
 			    
 			    if (updatedPreferences.size() == existingPreferencesList.size()) {
-			        throw new Exception("The requested preferences do not exist and cannot be deleted.");
+			        throw new UserNotFoundException("The requested preferences do not exist and cannot be deleted.");
 			    }
 
 			    dbUser.setPreferences(String.join(",", updatedPreferences));
