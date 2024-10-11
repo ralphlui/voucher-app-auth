@@ -476,10 +476,11 @@ public class UserController {
 	
 	private ResponseEntity<APIResponse<UserDTO>> handleResponseAndsendAuditLogForExceptionCase(Exception e, HttpStatusCode htpStatuscode, String activityType, String activityDesc, String apiEndPoint, String httpMethod ) {
 		String message = e.getMessage();
+		String responseMessage = e instanceof UserNotFoundException ? e.getMessage() : genericErrorMessage;
 		logger.error("Error: " + message);
 		activityDesc = activityDesc.concat(message);
 		auditLogService.sendAuditLogToSqs(Integer.toString(htpStatuscode.value()), auditLogUserId, auditLogUserName, activityType, activityDesc, apiEndPoint, auditLogResponseFailure, httpMethod, message);	
-		return ResponseEntity.status(htpStatuscode).body(APIResponse.error(genericErrorMessage));
+		return ResponseEntity.status(htpStatuscode).body(APIResponse.error(responseMessage));
 	}
 	
 	private ResponseEntity<APIResponse<UserDTO>> handleResponseAndsendAuditLogForSuccessCase(UserDTO userDTO, String activityType, String message, String apiEndPoint, String httpMethod) {
@@ -506,11 +507,12 @@ public class UserController {
 	
 	private ResponseEntity<APIResponse<List<UserDTO>>> handleResponseListAndsendAuditLogForExceptionCase(Exception e, String activityType, String activityDesc, String apiEndPoint, String httpMethod, String userId, String userName) {
 		String message = e.getMessage();
+		String responseMessage = e instanceof UserNotFoundException ? e.getMessage() : genericErrorMessage;
 		logger.error("Error: " + message);
 		activityDesc = activityDesc.concat(message);
 		auditLogService.sendAuditLogToSqs(Integer.toString(HttpStatus.NOT_FOUND.value()), userId, userName, activityType, activityDesc, apiEndPoint, auditLogResponseSuccess, httpMethod, message);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(APIResponse.error(genericErrorMessage));
+				.body(APIResponse.error(responseMessage));
 	}
 	
 	private void getUserByUserID(String userID) {

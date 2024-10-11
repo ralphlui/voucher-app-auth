@@ -20,6 +20,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 
 import org.springframework.data.domain.Page;
 
+import voucher.management.app.auth.configuration.AWSConfig;
 import voucher.management.app.auth.configuration.VoucherManagementAuthenticationSecurityConfig;
 import voucher.management.app.auth.dto.UserDTO;
 import voucher.management.app.auth.dto.UserRequest;
@@ -45,6 +46,9 @@ public class UserService implements IUserService  {
 	
 	@Autowired
 	private EncryptionUtils encryptionUtils;
+	
+	@Autowired
+	private AWSConfig awsConfig;
 	
 	@Autowired
 	private VoucherManagementAuthenticationSecurityConfig securityConfig;
@@ -158,7 +162,7 @@ public class UserService implements IUserService  {
 		
 		if (userDTO == null) {
 			logger.error("Vefriy user failed: Verfiy Id is invalid or already verified.");
-			throw new UserNotFoundException("Vefriy user failed: Verfiy Id is invalid or already verified.");
+			throw new UserNotFoundException("Vefriy user failed: Verify Id is invalid or already verified.");
 		}
 		logger.info("User verification is successful.");
 		return userDTO;
@@ -225,8 +229,8 @@ public class UserService implements IUserService  {
 
 		try {
 
-			AmazonSimpleEmailService client = securityConfig.sesClient();
-			String from = securityConfig.getEmailFrom().trim();
+			AmazonSimpleEmailService client = awsConfig.sesClient();
+			String from = awsConfig.getEmailFrom().trim();
 			String clientURL = securityConfig.getFrontEndUrl().trim();
 
 			String to = user.getEmail();
@@ -333,7 +337,7 @@ public class UserService implements IUserService  {
 			
 			 String existingPreferencesStr = dbUser.getPreferences();
 			    if (existingPreferencesStr == null || existingPreferencesStr.isEmpty()) {
-			        throw new Exception("No existing user preferences to delete.");
+			        throw new UserNotFoundException("No existing user preferences to delete.");
 			    }
 			    
 			    List<String> existingPreferencesList = new ArrayList<>(Arrays.asList(existingPreferencesStr.split(",")));
@@ -344,7 +348,7 @@ public class UserService implements IUserService  {
 			    updatedPreferences.removeAll(deletedPreferences);
 			    
 			    if (updatedPreferences.size() == existingPreferencesList.size()) {
-			        throw new Exception("The requested preferences do not exist and cannot be deleted.");
+			        throw new UserNotFoundException("The requested preferences do not exist and cannot be deleted.");
 			    }
 
 			    dbUser.setPreferences(String.join(",", updatedPreferences));
